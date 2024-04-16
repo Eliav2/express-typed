@@ -23,6 +23,9 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.12.7
+      body-parser:
+        specifier: ^1.20.2
+        version: 1.20.2
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -61,6 +64,9 @@ importers:
 
   demo/frontend-demo:
     dependencies:
+      '@tanstack/react-query':
+        specifier: ^5.29.2
+        version: 5.29.2(react@18.2.0)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -100,6 +106,10 @@ importers:
         version: 5.2.9
 
   packages/express-typed:
+    dependencies:
+      '@types/express-serve-static-core':
+        specifier: ^4.19.0
+        version: 4.19.0
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
@@ -993,6 +1003,19 @@ packages:
     dev: true
     optional: true
 
+  /@tanstack/query-core@5.29.0:
+    resolution: {integrity: sha512-WgPTRs58hm9CMzEr5jpISe8HXa3qKQ8CxewdYZeVnA54JrPY9B1CZiwsCoLpLkf0dGRZq+LcX5OiJb0bEsOFww==}
+    dev: false
+
+  /@tanstack/react-query@5.29.2(react@18.2.0):
+    resolution: {integrity: sha512-nyuWILR4u7H5moLGSiifLh8kIqQDLNOHGuSz0rcp+J75fNc8aQLyr5+I2JCHU3n+nJrTTW1ssgAD8HiKD7IFBQ==}
+    peerDependencies:
+      react: ^18.0.0
+    dependencies:
+      '@tanstack/query-core': 5.29.0
+      react: 18.2.0
+    dev: false
+
   /@types/babel__core@7.20.5:
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
     dependencies:
@@ -1383,7 +1406,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001610
-      electron-to-chromium: 1.4.737
+      electron-to-chromium: 1.4.738
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
     dev: true
@@ -1546,8 +1569,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /electron-to-chromium@1.4.737:
-    resolution: {integrity: sha512-QvLTxaLHKdy5YxvixAw/FfHq2eWLUL9KvsPjp0aHK1gI5d3EDuDgITkvj0nFO2c6zUY3ZqVAJQiBYyQP9tQpfw==}
+  /electron-to-chromium@1.4.738:
+    resolution: {integrity: sha512-lwKft2CLFztD+vEIpesrOtCrko/TFnEJlHFdRhazU7Y/jx5qc4cqsocfVrBg4So4gGe9lvxnbLIoev47WMpg+A==}
     dev: true
 
   /encodeurl@1.0.2:

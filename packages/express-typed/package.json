@@ -1,7 +1,9 @@
 {
   "name": "express-typed",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
+  "type": "module",
+  "main": "dist/express-typed.js",
   "module": "dist/express-typed.js",
   "types": "dist/express-typed.d.ts",
   "scripts": {
@@ -18,5 +20,8 @@
   },
   "peerDependencies": {
     "express": "*"
+  },
+  "dependencies": {
+    "@types/express-serve-static-core": "^4.19.0"
   }
 }

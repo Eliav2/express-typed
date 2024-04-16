@@ -1,4 +1,7 @@
 import express from "express";
+import {Request, Response} from "express-serve-static-core";
+
+// interface SafeRequest extends Request {}
 
 export class Handler<Res extends any[] = []> {
   constructor() {}
@@ -19,10 +22,13 @@ export class Handler<Res extends any[] = []> {
   }
 }
 
-export type ExpressHandlerNames = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
+export type HandlerNames = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
 export class TypedRouter<
-  R extends { [key: string]: { [key in ExpressHandlerNames]?: (req: Handler, res: Handler) => any } }
+  R extends { [key: string]: { [key in HandlerNames]?: (req: Handler, res: Handler) => any } }
+  //   todo: how to make req and res both handlers and also have the correct type?
+  //    Handlers store the generic types correctly but how to make the req and res have the same type?
+  // R extends { [key: string]: { [key in HandlerNames]?: (req: Request, res: Response) => any } }
 > {
   router: express.Router;
   routes: R;
@@ -38,13 +44,35 @@ export class TypedRouter<
   }
 }
 
+// export type GetRoutes<T extends TypedRouter<any>> = keyof T["routes"];
+
+
+// example usage
+// const router = express.Router();
+// router.post("/", async (req, res) => {
+//     res.send(req.body).status(200);
+// })
 // const typedRouter = new TypedRouter({
 //   "/": {
 //     get: (req, res) => {
 //       return res.send("Typesafe Route!").status(200);
 //     },
 //   },
+//   "/test": {
+//     get: (req, res) => {
+//       return res.send({ message: 123 }).status(200);
+//     },
+//     post: (req, res) => {
+//       return res.send(req.body).status(200);
+//     },
+//   },
 // });
+//
+// export type TypedRouterTypes = typeof typedRouter;
+//
+// type RoutesType = GetRoutes<TypedRouterTypes>;
+//
+// type GetRouteResponse<T extends TypedRouter<any>, K extends GetRoutes<T>> = ReturnType<T["routes"][K]["get"]>;
+//
+// type Test = GetRouteResponse<TypedRouterTypes, "/test">;
 
-//   const handler = new Handler();
-//   const c1 = handler.send(200).post({ message: "123" });
