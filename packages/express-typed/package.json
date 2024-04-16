@@ -1,0 +1,22 @@
+{
+  "name": "express-typed",
+  "version": "0.0.0",
+  "description": "",
+  "module": "dist/express-typed.js",
+  "types": "dist/express-typed.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "express": "^4.19.2",
+    "typescript": "^5.4.2"
+  },
+  "peerDependencies": {
+    "express": "*"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "express-typed-demo",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/app.ts"
+  },
+  "dependencies": {
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.12.7",
+    "express": "^4.19.2",
+    "morgan": "^1.10.0",
+    "express-typed": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2"
+  }
+}
+  
