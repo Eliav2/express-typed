@@ -23,5 +23,8 @@
   },
   "dependencies": {
     "@types/express-serve-static-core": "^4.19.0"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

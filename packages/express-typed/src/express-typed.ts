@@ -1,34 +1,30 @@
 import express from "express";
-import {Request, Response} from "express-serve-static-core";
+import type { Request, Response, NextFunction } from "express-serve-static-core";
 
-// interface SafeRequest extends Request {}
+export interface IHandlerResponse<Res extends any[] = []> extends Response {
+  status<T>(arg: T): IHandlerResponse<[...Res, { status: T }]> & this;
+  links<const T>(arg: T): IHandlerResponse<[...Res, { links: T }]> & this;
+  sendStatus<const T>(arg: T): IHandlerResponse<[...Res, { sendStatus: T }]> & this;
+  contentType<const T>(arg: T): IHandlerResponse<[...Res, { contentType: T }]> & this;
+  type<const T>(arg: T): IHandlerResponse<[...Res, { type: T }]> & this;
+  format<const T>(arg: T): IHandlerResponse<[...Res, { format: T }]> & this;
+  attachment<const T>(arg: T): IHandlerResponse<[...Res, { attachment: T }]> & this;
 
-export class Handler<Res extends any[] = []> {
-  constructor() {}
-
-  put<const T>(arg: T): Handler<[...Res, { put: T }]> {
-    return new Handler();
-  }
-
-  post<const T>(arg: T): Handler<[...Res, { post: T }]> {
-    return new Handler();
-  }
-
-  send<const T>(arg: T): Handler<[...Res, { send: T }]> {
-    return new Handler();
-  }
-  status<const T>(arg: T): Handler<[...Res, { status: T }]> {
-    return new Handler();
-  }
+  send<const T>(arg: T): IHandlerResponse<[...Res, { send: T }]> & this;
+  json<const T>(arg: T): IHandlerResponse<[...Res, { json: T }]> & this;
+  jsonp<const T>(arg: T): IHandlerResponse<[...Res, { jsonp: T }]> & this;
 }
 
-export type HandlerNames = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
+export interface IHandlerRequest<Res extends any[] = []> extends Request {}
+
+export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
 export class TypedRouter<
-  R extends { [key: string]: { [key in HandlerNames]?: (req: Handler, res: Handler) => any } }
-  //   todo: how to make req and res both handlers and also have the correct type?
-  //    Handlers store the generic types correctly but how to make the req and res have the same type?
-  // R extends { [key: string]: { [key in HandlerNames]?: (req: Request, res: Response) => any } }
+  R extends {
+    [key: string]: {
+      [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
+    };
+  },
 > {
   router: express.Router;
   routes: R;
@@ -46,33 +42,39 @@ export class TypedRouter<
 
 // export type GetRoutes<T extends TypedRouter<any>> = keyof T["routes"];
 
-
 // example usage
-// const router = express.Router();
-// router.post("/", async (req, res) => {
-//     res.send(req.body).status(200);
-// })
-// const typedRouter = new TypedRouter({
-//   "/": {
-//     get: (req, res) => {
-//       return res.send("Typesafe Route!").status(200);
-//     },
-//   },
-//   "/test": {
-//     get: (req, res) => {
-//       return res.send({ message: 123 }).status(200);
-//     },
-//     post: (req, res) => {
-//       return res.send(req.body).status(200);
-//     },
-//   },
-// });
-//
-// export type TypedRouterTypes = typeof typedRouter;
-//
-// type RoutesType = GetRoutes<TypedRouterTypes>;
-//
-// type GetRouteResponse<T extends TypedRouter<any>, K extends GetRoutes<T>> = ReturnType<T["routes"][K]["get"]>;
+const router = express.Router();
+router.post("/", async (req, res, next) => {
+  res.send(req.body).status(200);
+});
+
+const typedRouter = new TypedRouter({
+  "/": {
+    get: (req, res) => {
+      const test = res.send("Typesafe Route!").status(200);
+      return test;
+    },
+  },
+  "/test": {
+    get: (req, res) => {
+      return res.send({ message: 123 }).status(200);
+    },
+    post: (req, res) => {
+      return res.send(req.body).status(200);
+    },
+  },
+});
+
+export type TypedRouterTypes = typeof typedRouter;
+
+type RoutesType = TypedRouterTypes["routes"];
+
+type GetRouteResponse<
+  Router extends { routes: any },
+  Path extends keyof Router["routes"],
+  Method extends keyof Router["routes"][Path],
+> = ReturnType<Router["routes"][Path][Method]>;
+type t1 = GetRouteResponse<typeof typedRouter, "/", "get">;
+
 //
 // type Test = GetRouteResponse<TypedRouterTypes, "/test">;
-
