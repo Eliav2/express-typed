@@ -22,7 +22,8 @@
     "express": "*"
   },
   "dependencies": {
-    "@types/express-serve-static-core": "^4.19.0"
+    "@types/express-serve-static-core": "^4.19.0",
+    "@types/qs": "^6.9.15"
   },
   "files": [
     "dist"
