@@ -1,4 +1,4 @@
-import { GetRouteResponseInfo, GetRoutesInfo, InferRes, TypedRouter } from "express-typed";
+import { GetRouteResponseInfo, GetRoutesInfo, InferRes, TypedRouter, HandlerMethods, KeysWithMethod } from "express-typed";
 
 const typedRouter = new TypedRouter({
   "/": {
@@ -14,11 +14,23 @@ const typedRouter = new TypedRouter({
       return res.send("TEST! Typesafe Route!").status(200);
     },
   },
+  "/mutate": {
+    post: (req, res) => {
+      return res.send("Mutated!").status(200);
+    },
+  },
+  "/json": {
+    get: (req, res) => {
+      return res.json({ message: "json" }).status(200);
+    },
+  },
 });
+
+export default typedRouter;
 
 // export type TypedRoutes = (typeof typedRouter)['routes'];
 
-type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
+export type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
 //   ^?
 //   type TypedRoutes = {
 //     "/": {
@@ -30,19 +42,15 @@ type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
 //     };
 //   }
 
-type RoutesResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
+export type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
   typeof typedRouter,
   Path,
   Method
 >;
-
-type RoutesResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
+export type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
   GetRouteResponseInfo<typeof typedRouter, Path, Method>
 >;
 
-type HomeRouteInfo = RoutesResolver<"/", "get">;
-type HomeRouteResponse = RoutesResponseResolver<"/", "get">;
-//   ^?
-//   type HomeRouteResponse = "Typesafe Route!"
-
-export default typedRouter;
+export type RoutesWithMethod<Method extends HandlerMethods> = {
+  [key in KeysWithMethod<TypedRoutes, Method>]: Method extends keyof TypedRoutes[key] ? RouteResponseResolver<key, Method> : never;
+};

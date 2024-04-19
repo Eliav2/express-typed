@@ -1,17 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import type { TypedRoutes } from "../../express-typed-demo/src/router";
-import type { GetRoutes } from "express-typed";
+import type { TypedRoutes, RoutesWithMethod } from "express-typed-demo/src/router";
+// import type { GetRoutes } from "express-typed";
 
-const useBackendQuery = (path: keyof TypedRoutes) => {
-  return useQuery({
+type GetRoutes = RoutesWithMethod<"get">;
+
+export const useBackendQuery = <P extends keyof GetRoutes>(path: P) => {
+  return useQuery<GetRoutes[P]>({
     queryKey: [path],
     queryFn: async () => {
-      const res = await fetch(`http://localhost:4000${path}`);
-      return res.json();
+      const res = await fetch(`/api${path}`);
+      return res.text();
     },
   });
-};
-
-const useHelloQuery = () => {
-  return useBackendQuery("/test");
 };

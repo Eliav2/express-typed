@@ -67,6 +67,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.29.2
         version: 5.29.2(react@18.2.0)
+      express-typed-demo:
+        specifier: workspace:*
+        version: link:../express-typed-demo
       react:
         specifier: ^18.2.0
         version: 18.2.0

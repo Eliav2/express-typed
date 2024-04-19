@@ -21,6 +21,50 @@ export type IHandlerRequest<Req extends any[] = []> = {} & Request;
 
 export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
+/**
+ * TypedRouter is a type-safe wrapper for Express Router.
+ *
+ * @example
+ * ```ts
+ * const typedRouter = new TypedRouter({
+ *   "/": {
+ *     get: (req, res) => {
+ *       const test = res.send("Typesafe Route!").status(200);
+ *       return test;
+ *     },
+ *   },
+ *   "/test": {
+ *     get: (req, res) => {
+ *       return res.json({ message: 123 }).status(200).send("test");
+ *     },
+ *     post: (req, res) => {
+ *       return res.send("post res!").status(200);
+ *     },
+ *   },
+ *   "post-only": {
+ *     post: (req, res) => {
+ *       return res.send("post only res!").status(200);
+ *     },
+ *   },
+ * });
+ * export type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
+ * export type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
+ *   typeof typedRouter,
+ *   Path,
+ *   Method
+ * >;
+ * export type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
+ *   GetRouteResponseInfo<typeof typedRouter, Path, Method>
+ * >;
+ * export type RoutesWithMethod<Method extends HandlerMethods> = {
+ *   [key in KeysWithMethod<TypedRoutes, Method>]: Method extends keyof TypedRoutes[key] ? RouteResponseResolver<key, Method> : never;
+ * };
+ * // usage
+ * type HomeRouteInfo = RouteResolver<"/", "get">;
+ * type HomeRouteResponse = RouteResponseResolver<"/", "get">;
+ * type GetRoutesWithPostMethod = RoutesWithMethod<"get">;
+ * ```
+ */
 export class TypedRouter<
   R extends {
     [key: string]: {
@@ -56,13 +100,17 @@ export type InferRes<T> = T extends (infer U)[]
     : never
   : never;
 
-////////////////
-// example usage
+export type KeysWithMethod<T, Method extends string> = {
+  [K in keyof T]: Method extends keyof T[K] ? K : never;
+}[keyof T];
+
+// ////////////////
+// // example usage
 // const router = express.Router();
 // router.post("/", async (req, res, next) => {
 //   res.send(req.body).status(200);
 // });
-//
+
 // const typedRouter = new TypedRouter({
 //   "/": {
 //     get: (req, res) => {
@@ -75,31 +123,32 @@ export type InferRes<T> = T extends (infer U)[]
 //       return res.json({ message: 123 }).status(200).send("test");
 //     },
 //     post: (req, res) => {
-//       return res.send(req.body).status(200);
+//       return res.send("post res!").status(200);
+//     },
+//   },
+//   "post-only": {
+//     post: (req, res) => {
+//       return res.send("post only res!").status(200);
 //     },
 //   },
 // });
-//
-// type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
-// //   ^?
-// // type TypedRoutes = {
-// //   "/": {
-// //       get: (req: Request<ParamsDictionary, any, any, QueryString.ParsedQs, Record<string, any>>, res: IHandlerResponse<[]>) => IHandlerResponse<...>;
-// //   };
-// //   "/test": {
-// //       ...;
-// //   };
-// // }
-//
-// type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
+
+// export type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
+
+// export type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
 //   typeof typedRouter,
 //   Path,
 //   Method
 // >;
-// type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
+// export type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
 //   GetRouteResponseInfo<typeof typedRouter, Path, Method>
 // >;
-//
+
+// export type RoutesWithMethod<Method extends HandlerMethods> = {
+//   [key in KeysWithMethod<TypedRoutes, Method>]: Method extends keyof TypedRoutes[key] ? RouteResponseResolver<key, Method> : never;
+// };
+
+// // usage
 // type HomeRouteInfo = RouteResolver<"/", "get">;
 // type HomeRouteResponse = RouteResponseResolver<"/", "get">;
-//
+// type GetRoutesWithPostMethod = RoutesWithMethod<"get">;

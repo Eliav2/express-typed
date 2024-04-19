@@ -1,6 +1,6 @@
 {
   "name": "express-typed",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "",
   "type": "module",
   "main": "dist/express-typed.js",
@@ -8,7 +8,8 @@
   "types": "dist/express-typed.d.ts",
   "scripts": {
     "build": "tsc",
-    "build:watch": "tsc -w"
+    "build:watch": "tsc -w",
+    "prepublish": "pnpm build"
   },
   "keywords": [],
   "author": "",

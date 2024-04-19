@@ -12,7 +12,8 @@
   "dependencies": {
     "@tanstack/react-query": "^5.29.2",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "express-typed-demo": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
