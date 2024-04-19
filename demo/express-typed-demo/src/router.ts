@@ -35,6 +35,7 @@ type RoutesResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRo
   Path,
   Method
 >;
+
 type RoutesResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
   GetRouteResponseInfo<typeof typedRouter, Path, Method>
 >;
@@ -43,6 +44,5 @@ type HomeRouteInfo = RoutesResolver<"/", "get">;
 type HomeRouteResponse = RoutesResponseResolver<"/", "get">;
 //   ^?
 //   type HomeRouteResponse = "Typesafe Route!"
-
 
 export default typedRouter;
