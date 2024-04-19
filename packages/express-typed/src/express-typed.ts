@@ -26,7 +26,7 @@ export class TypedRouter<
     [key: string]: {
       [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
     };
-  }
+  },
 > {
   router: express.Router;
   routes: R;
@@ -42,8 +42,21 @@ export class TypedRouter<
   }
 }
 
-// export type GetRoutes<T extends TypedRouter<any>> = keyof T["routes"];
+export type GetRoutesInfo<T extends TypedRouter<any>> = T["routes"];
 
+export type GetRouteResponseInfo<
+  Router extends TypedRouter<any>,
+  Path extends keyof Router["routes"],
+  Method extends keyof Router["routes"][Path],
+> = ReturnType<Router["routes"][Path][Method]> extends IHandlerResponse<infer Res> ? Res : never;
+
+export type InferRes<T> = T extends (infer U)[]
+  ? U extends Record<any, infer R extends SendRes<any>>
+    ? R["_sentResponse"]
+    : never
+  : never;
+
+////////////////
 // example usage
 const router = express.Router();
 router.post("/", async (req, res, next) => {
@@ -67,42 +80,44 @@ const typedRouter = new TypedRouter({
   },
 });
 
-export type TypedRouterTypes = typeof typedRouter;
+type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
+//   ^?
+// type TypedRoutes = {
+//   "/": {
+//       get: (req: Request<ParamsDictionary, any, any, QueryString.ParsedQs, Record<string, any>>, res: IHandlerResponse<[]>) => IHandlerResponse<...>;
+//   };
+//   "/test": {
+//       ...;
+//   };
+// }
 
-type RoutesType = TypedRouterTypes["routes"];
+type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
+  typeof typedRouter,
+  Path,
+  Method
+>;
+type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
+  GetRouteResponseInfo<typeof typedRouter, Path, Method>
+>;
 
-type ResponseResolver<T extends TypedRouter<any>> = T extends TypedRouter<infer R> ? R : never;
+type HomeRouteInfo = RouteResolver<"/", "get">;
+type HomeRouteResponse = RouteResponseResolver<"/", "get">;
 
-type GetRouteResponseInfo<
-  Router extends TypedRouter<any>,
-  Path extends keyof Router["routes"],
-  Method extends keyof Router["routes"][Path]
-> = ReturnType<Router["routes"][Path][Method]> extends IHandlerResponse<infer Res> ? Res : never;
+// type TypedRoutesResponses = ResponseResolver<typeof typedRouter>;
+// type ResponseResolver<T extends TypedRouter<any>> = {
+//   [key in keyof T["routes"]]: { [key in keyof T["routes"][key]]: GetRouteResponseInfo<T, key, key> };
+// };
 
 // type InferRes<T> = T extends (infer U)[] ? (U extends Record<any, infer R extends SendRes<any>> ? R['_sentResponse'] : never) : never;
 
-type GetRouteResponseType<
-  Router extends TypedRouter<any>,
-  Path extends keyof Router["routes"],
-  Method extends keyof Router["routes"][Path]
-> = InferRes<ReturnType<Router["routes"][Path][Method]>>;
+// type GetRouteResponseType<
+//   Router extends TypedRouter<any>,
+//   Path extends keyof Router["routes"],
+//   Method extends keyof Router["routes"][Path]
+// > = InferRes<ReturnType<Router["routes"][Path][Method]>>;
+
+// type RouteResponseResolver<Path,Mehtod> =
+// type UseStateFnT<T,> = typeof 123
 
 type t1 = GetRouteResponseInfo<typeof typedRouter, "/test", "get">;
-type InferRes<T> = T extends (infer U)[] ? (U extends Record<any, infer R extends SendRes<any>> ? R['_sentResponse'] : never) : never;
 type t2 = InferRes<t1>;
-type t3 = GetRouteResponseType<typeof typedRouter, "/test", "get">;
-
-//
-// type Test = GetRouteResponse<TypedRouterTypes, "/test">;
-
-// type arr1 = [{ send: "asd" }, { status: number }];
-// type ExtractFromArray<T extends any[], K extends string | number | symbol> = T extends [{ [key in K]: infer R }, ...T]
-//   ? R
-//   : T extends any
-//   ? ExtractFromArray<T, K>
-//   : never;
-
-// type t3 = ExtractFromArray<arr1, "status">;
-
-// type arr1 = [{ send: '1' }, { status: '2' }, { send: 3}, { status: 4}];
-// type t = ExtractFromArray<arr1, "send">; // t is number
