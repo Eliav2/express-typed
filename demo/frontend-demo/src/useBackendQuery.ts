@@ -9,7 +9,8 @@ export const useBackendQuery = <P extends keyof GetRoutes>(path: P) => {
     queryKey: [path],
     queryFn: async () => {
       const res = await fetch(`/api${path}`);
-      return res.text();
+      const text = await res.text();
+      return text;
     },
   });
 };

@@ -20,6 +20,7 @@ type SendRes<T> = { _sentResponse: T };
 export type IHandlerRequest<Req extends any[] = []> = {} & Request;
 
 export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
+// todo: support nested routes
 
 /**
  * TypedRouter is a type-safe wrapper for Express Router.

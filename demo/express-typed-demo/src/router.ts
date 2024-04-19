@@ -28,8 +28,6 @@ const typedRouter = new TypedRouter({
 
 export default typedRouter;
 
-// export type TypedRoutes = (typeof typedRouter)['routes'];
-
 export type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
 //   ^?
 //   type TypedRoutes = {
