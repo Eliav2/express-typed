@@ -159,23 +159,25 @@ type SpreadRoutes<R> = R extends TypedRouter<infer Routes>
         ? Routes[P] extends TypedRouter<infer Nested>
           ? // this is for nested routes values
             // `${OnlyString<P>}${ResolveRouteKeys<Routes[P], keyof Nested>}` extends ResolveRouteKeys<Routes, infer K>?P:'2'
-            // `${OnlyString<P>}${FlatKeyof<N>}` extends `${OnlyString<P>}${infer K}`?K:never
-            `${P}${keyof Nested extends string ? `${keyof Nested}` : ""}`
-          : Routes[P] // this is for non-nested routes values
+            `${OnlyString<P>}${FlatKeyof<N>}` extends `${OnlyString<P>}${infer K}`
+            ? K
+            : never
+          : // `${P}${keyof Nested extends string ? `${keyof Nested}` : ""}`
+            Routes[P] // this is for non-nested routes values
         : never;
     }
   : never;
-// type SpreadRoutes2<R> = R extends TypedRouter<infer Routes>
-//   ? {
-//       [P in keyof Routes]: Routes[P] extends TypedRouter<any>
-//         ? // this is for nested routes values
-//           SpreadRoutes2<Routes[P]> & Routes
-//         : Routes[P]; // this is for non-nested routes values
-//     }
-//   : never;
-// type FlattenRoutes<T, K extends string = ""> = T extends TypedRouter<infer R>
-//   ? { [P in keyof R & string as `${K}${P extends "" ? "" : "/"}${P}`]: FlattenRoutes<R[P], `${K}${P extends "" ? "" : "/"}${P}`> }
-//   : T;
+type SpreadRoutes2<R> = R extends TypedRouter<infer Routes>
+  ? {
+      [P in keyof Routes]: Routes[P] extends TypedRouter<any>
+        ? // this is for nested routes values
+          SpreadRoutes2<Routes[P]> & Routes
+        : Routes[P]; // this is for non-nested routes values
+    }
+  : never;
+type FlattenRoutes<T, K extends string = ""> = T extends TypedRouter<infer R>
+  ? { [P in keyof R & string as `${K}${P extends "" ? "" : "/"}${P}`]: FlattenRoutes<R[P], `${K}${P extends "" ? "" : "/"}${P}`> }
+  : T;
 
 // type SpreadRoutes<T> = {
 //   [K in keyof FlattenRoutes<T>]: FlattenRoutes<T>[K] extends TypedRouter<infer R> ? never : FlattenRoutes<T>[K]
@@ -186,8 +188,9 @@ type test = { [key: string]: any; 10: "test" } extends { [key: string]: any } ? 
 
 type NestedRouter = TypedRouter<{
   "/": { get: any };
-  "/router": TypedRouter<{ "/111": 111; "/555": 555; "/doubleNested": TypedRouter<{ "/kk": "some nested val" }> }>;
-  "/xxx": "zz";
+  "/router": TypedRouter<{ "/111": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": {all:any} }> }>;
+  "/xxx": { get: any };
+  "/xxxqq": TypedRouter<{ "/": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": {all:any} }> }>;
 }>;
 
 type st1 = SpreadRouters<TypedRouter<{ "/": { get: any } }>>;
@@ -196,15 +199,30 @@ type st3 = SpreadRoutes<NestedRouter>;
 type st4 = SpreadRoutes2<NestedRouter>;
 type st31 = st3["/router/12"];
 
+type FlatNestedRouters_1<T> = {
+  [K in keyof T]: K extends string
+    ? (
+        x: T[K] extends TypedRouter<infer N>
+          ? { [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: FlatNestedRouters_1<N[K2]> }
+          : Pick<T, K>
+      ) => void
+    : never;
+};
+type st5_1 = FlatNestedRouters_1<NestedRouter["routes"]>;
+
 type FlatNestedRouters<T> = {
-  [K in keyof T & string]: (
-    x: T[K] extends TypedRouter<infer N> ? FlatNestedRouters<{ [K2 in keyof N & string as `${K}${K2}`]: N[K2] }> : Pick<T, K>
-  ) => void;
+  [K in keyof T]: K extends string
+    ? (
+        x: T[K] extends TypedRouter<infer N>
+          ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
+          : Pick<T, K>
+      ) => void
+    : never;
 } extends { [k: string]: (x: infer I) => void }
   ? { [K in keyof I]: I[K] }
   : never;
-
 type st5 = FlatNestedRouters<NestedRouter["routes"]>;
+type st5_122= st5['']
 
 // type t2 = Test2<{ "/": { get: any }; "/post": { post: any }; "/another": { put: any } }>;
 // type t3 = Test3<{ "/": { get: any }; "/router": TypedRouter<{ "/": any }> }>;
@@ -216,19 +234,6 @@ type OriginalType = {
   prop2: number;
 };
 
-type RenamedType = {
-  [K in keyof OriginalType as `renamed_${K}`]: OriginalType[K];
-};
-
-type CombinedType = OriginalType & RenamedType;
-
-// The CombinedType will have both the original and renamed properties:
-// {
-//   prop1: string;
-//   prop2: number;
-//   renamed_prop1: string;
-//   renamed_prop2: number;
-// }
 export class TypedRouter<
   R extends Record<
     string,
