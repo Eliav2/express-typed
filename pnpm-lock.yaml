@@ -109,17 +109,13 @@ importers:
         version: 5.2.9
 
   packages/express-typed:
-    dependencies:
-      '@types/express-serve-static-core':
-        specifier: ^4.19.0
-        version: 4.19.0
-      '@types/qs':
-        specifier: ^6.9.15
-        version: 6.9.15
     devDependencies:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
+      '@types/express-serve-static-core':
+        specifier: ^4.19.0
+        version: 4.19.0
       express:
         specifier: ^4.19.2
         version: 4.19.2
