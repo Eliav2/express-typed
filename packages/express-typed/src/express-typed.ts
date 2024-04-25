@@ -2,7 +2,7 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express-serve-static-core";
 
 export type IHandlerResponse<Res extends any[] = []> = {
-  status<T>(arg: T): IHandlerResponse<[...Res, { status: T }]>;
+  status<const T>(arg: T): IHandlerResponse<[...Res, { status: T }]>;
   links<const T>(arg: T): IHandlerResponse<[...Res, { links: T }]>;
   sendStatus<const T>(arg: T): IHandlerResponse<[...Res, { sendStatus: T }]>;
   contentType<const T>(arg: T): IHandlerResponse<[...Res, { contentType: T }]>;
@@ -68,183 +68,36 @@ export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch"
  * ```
  */
 
-// type Test<R extends Record<string, Partial<Record<HandlerMethods, (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void>>>> = {
-//   [K in keyof R]: {
-//     [P in keyof R[K]]: P extends HandlerMethods ? R[K][P] : never;
-//   };
-// };
-// type Exactly<T, U> = T & Record<Exclude<keyof U, keyof T>, never>;
-// type Exactly<T, U extends T> = { [K in keyof U]: K extends keyof T ? T[K] : never };
-
-type StrictPartial<T> = {
-  [P in keyof T]?: T[P];
-};
-// type t1 = Test<{ "/": { get: any } }>;
-type Test2<R> = R extends Record<infer P extends string, infer K>
-  ? K extends Partial<Record<HandlerMethods, (req?: IHandlerRequest, res?: IHandlerResponse, next?: NextFunction) => void>>
-    ? { [key in P]: K } // this is Routes mapping such as { "/": { get: (req,res)=>any } }
-    : K extends TypedRouter<infer R>
-    ? R["routes"]
-    : never
-  : never;
-
-type Handler = (req?: IHandlerRequest, res?: IHandlerResponse, next?: NextFunction) => void;
-
-type Test3<R> = R extends {
-  [Path in string]:
-    | {
-        [K in HandlerMethods]?: (req?: IHandlerRequest, res?: IHandlerResponse, next?: NextFunction) => void;
-      }
-    | TypedRouter<any>;
-}
-  ? R
-  : never;
-
-type Test4<R> = R extends {
-  [key: string]: infer H;
-}
-  ? {
-      [P in keyof R]: H extends { [M in HandlerMethods]?: any } ? H : H extends TypedRouter<any> ? H : never;
-    }
-  : never;
-
-type Test5<R> = R extends {
-  [key: string]: infer H;
-}
-  ? {
-      [P in keyof R as string]: H extends { [M in HandlerMethods]?: any }
-        ? H
-        : H extends TypedRouter<infer NestedR>
-        ? TypedRouter<NestedR, P & string>
-        : never;
-    }
-  : never;
-
-type SpreadRouters<Router> = Router extends TypedRouter<infer Routes>
-  ? {
-      // [Route in keyof Routes]: Routes[Route] extends Handler ? Handler : never;
-      [Route in keyof Routes & string]: Routes[Route] extends { [M in HandlerMethods]?: any }
-        ? Routes[Route]
-        : Routes[Route] extends TypedRouter<infer NestedRoutes>
-        ? SpreadRouters<TypedRouter<NestedRoutes, Route>>
-        : never;
-    }
-  : never;
-
-// type SpreadRoutes<Router> = Router extends TypedRouter<infer Routes>? {[Route in keyof Routes]:Routes[Route]} : never;
-// type SpreadRoutes<R> = R extends TypedRouter<infer Routes>
-//   ? {
-//       [P in keyof Routes as P extends string
-//         ? Routes[P] extends TypedRouter<any>
-//           ? `${P}${string & keyof SpreadRoutes<Routes[P]>}`
-//           : P
-//         : never]: Routes[P] extends TypedRouter<any>
-//         ? SpreadRoutes<Routes[P]>
-//         : Routes[P];
-//     }
-//   : never;
-
-type ResolveRouteKeys<Routes, P extends keyof Routes> = P extends string
-  ? Routes[P] extends TypedRouter<infer Nested>
-    ? `${P}${keyof Nested extends string ? `${keyof Nested}` : ""}`
-    : P // this retrun branch is for non-nested routes route keys
-  : never;
-
-type OnlyString<T> = T extends string ? T : never;
-type FlatKeyof<T> = OnlyString<keyof T>;
-
-type SpreadRoutes<R> = R extends TypedRouter<infer Routes>
-  ? {
-      [P in keyof Routes as ResolveRouteKeys<Routes, P>]: P extends string
-        ? Routes[P] extends TypedRouter<infer Nested>
-          ? // this is for nested routes values
-            // `${OnlyString<P>}${ResolveRouteKeys<Routes[P], keyof Nested>}` extends ResolveRouteKeys<Routes, infer K>?P:'2'
-            `${OnlyString<P>}${FlatKeyof<N>}` extends `${OnlyString<P>}${infer K}`
-            ? K
-            : never
-          : // `${P}${keyof Nested extends string ? `${keyof Nested}` : ""}`
-            Routes[P] // this is for non-nested routes values
-        : never;
-    }
-  : never;
-type SpreadRoutes2<R> = R extends TypedRouter<infer Routes>
-  ? {
-      [P in keyof Routes]: Routes[P] extends TypedRouter<any>
-        ? // this is for nested routes values
-          SpreadRoutes2<Routes[P]> & Routes
-        : Routes[P]; // this is for non-nested routes values
-    }
-  : never;
-type FlattenRoutes<T, K extends string = ""> = T extends TypedRouter<infer R>
-  ? { [P in keyof R & string as `${K}${P extends "" ? "" : "/"}${P}`]: FlattenRoutes<R[P], `${K}${P extends "" ? "" : "/"}${P}`> }
-  : T;
-
-// type SpreadRoutes<T> = {
-//   [K in keyof FlattenRoutes<T>]: FlattenRoutes<T>[K] extends TypedRouter<infer R> ? never : FlattenRoutes<T>[K]
-// };
-
-// Results in type Flags = { 'key-option1': boolean, 'key-option2': boolean }
-type test = { [key: string]: any; 10: "test" } extends { [key: string]: any } ? true : false;
-
 type NestedRouter = TypedRouter<{
   "/": { get: any };
-  "/router": TypedRouter<{ "/111": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": {all:any} }> }>;
   "/xxx": { get: any };
-  "/xxxqq": TypedRouter<{ "/": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": {all:any} }> }>;
+  // "/router": TypedRouter<{ "/": { post: (req,res)=>{}, } }>;
+  "/router": TypedRouter<{ "/111": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": { all: any } }> }>;
+  "/xxxqq": TypedRouter<{ "/": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": { all: any } }> }>;
 }>;
 
-type st1 = SpreadRouters<TypedRouter<{ "/": { get: any } }>>;
-type st2 = SpreadRouters<NestedRouter>;
-type st3 = SpreadRoutes<NestedRouter>;
-type st4 = SpreadRoutes2<NestedRouter>;
-type st31 = st3["/router/12"];
-
-type FlatNestedRouters_1<T> = {
-  [K in keyof T]: K extends string
-    ? (
-        x: T[K] extends TypedRouter<infer N>
-          ? { [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: FlatNestedRouters_1<N[K2]> }
-          : Pick<T, K>
-      ) => void
-    : never;
-};
-type st5_1 = FlatNestedRouters_1<NestedRouter["routes"]>;
-
-type FlatNestedRouters<T> = {
-  [K in keyof T]: K extends string
-    ? (
-        x: T[K] extends TypedRouter<infer N>
-          ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
-          : Pick<T, K>
-      ) => void
-    : never;
-} extends { [k: string]: (x: infer I) => void }
-  ? { [K in keyof I]: I[K] }
-  : never;
-type st5 = FlatNestedRouters<NestedRouter["routes"]>;
-type st5_122= st5['']
-
-// type t2 = Test2<{ "/": { get: any }; "/post": { post: any }; "/another": { put: any } }>;
-// type t3 = Test3<{ "/": { get: any }; "/router": TypedRouter<{ "/": any }> }>;
-// type t4 = Test4<{ "/": { get: any }; "/router": TypedRouter<{ "/": any }> }>;
-// type t5 = Test5<{ "/": { get: any }; "/router": TypedRouter<{ "/": any }> }>;
-
-type OriginalType = {
-  prop1: string;
-  prop2: number;
-};
-
 export class TypedRouter<
-  R extends Record<
-    string,
-    Partial<Record<HandlerMethods, (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void>> | TypedRouter<any>
-  >
-  // Prefix extends string = ""
+  // R extends Record<
+  //   string,
+  //   XOR<Partial<Record<HandlerMethods, (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void>>, TypedRouter<any>>
+  // >
   // R extends {
-  //   [key: string]: {
-  //     [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
-  //   };
-  // },
+  //   [key: string]: XOR<
+  //     {
+  //       [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
+  //     },
+  //     TypedRouter<any>
+  //   >;
+  // }
+  R extends {
+    [K in string]: R[K] extends TypedRouter<infer N>
+      ? TypedRouter<N>
+      :
+          | {
+              [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
+            }
+          | TypedRouter<any>;
+  }
 > {
   router: express.Router;
   routes: R;
@@ -266,17 +119,33 @@ export class TypedRouter<
   }
 }
 
-type Keys = "option1" | "option2";
-type Flags = { [K in Keys as `key-${K}`]: boolean };
-// Results in type Flags = { 'key-option1': boolean, 'key-option2': boolean }
+type FlatNestedRouters<T> = {
+  [K in keyof T]: K extends string
+    ? (
+        x: T[K] extends TypedRouter<infer N>
+          ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
+          : Pick<T, K>
+      ) => void
+    : never;
+} extends { [k: string]: (x: infer I) => void }
+  ? { [K in keyof I]: I[K] }
+  : never;
 
 export type GetRoutesInfo<T extends TypedRouter<any>> = T["routes"];
 
 export type GetRouteResponseInfo<
   Router extends TypedRouter<any>,
-  Path extends keyof Router["routes"],
-  Method extends keyof Router["routes"][Path]
-> = ReturnType<Router["routes"][Path][Method]> extends IHandlerResponse<infer Res> ? Res : never;
+  // Path extends keyof Router["routes"],
+  Path extends keyof FlatNestedRouters<Router["routes"]>,
+  Method extends keyof FlatNestedRouters<Router["routes"]>[Path]
+  // > = FlatNestedRouters<Router["routes"]>[Path][Method]
+> = ReturnType<
+  FlatNestedRouters<Router["routes"]>[Path][Method] extends (...args: any) => any
+    ? FlatNestedRouters<Router["routes"]>[Path][Method]
+    : never
+> extends IHandlerResponse<infer Res>
+  ? Res
+  : never;
 
 export type InferRes<T> = T extends (infer U)[]
   ? U extends Record<any, infer R extends SendRes<any>>
@@ -288,60 +157,86 @@ export type KeysWithMethod<T, Method extends string> = {
   [K in keyof T]: Method extends keyof T[K] ? K : never;
 }[keyof T];
 
-// // Usage
-// type ExampleType = {
-//   prop1: string;
-//   prop2: number;
-//   prop3: boolean;
-// };
+// type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
 
-// type PartialExampleType = StrictPartial<ExampleType>; // { prop1?: string; prop2?: number; prop3?: boolean; }
+/**
+ * XOR is needed to have a real mutually exclusive union type
+ * https://stackoverflow.com/questions/42123407/does-typescript-support-mutually-exclusive-types
+ */
+type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
+type XOR<T, U> = T | U extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U;
 
-// ////////////////
-// // example usage
-// const router = express.Router();
-// router.post("/", async (req, res, next) => {
-//   res.send(req.body).status(200);
-// });
+////////////////
+// example usage
 
-// const typedRouter = new TypedRouter({
-//   "/": {
-//     get: (req, res) => {
-//       const test = res.send("Typesafe Route!").status(200);
-//       return test;
-//     },
-//   },
-//   "/test": {
-//     get: (req, res) => {
-//       return res.json({ message: 123 }).status(200).send("test");
-//     },
-//     post: (req, res) => {
-//       return res.send("post res!").status(200);
-//     },
-//   },
-//   "post-only": {
-//     post: (req, res) => {
-//       return res.send("post only res!").status(200);
-//     },
-//   },
-// });
+type OnlyString<T> = T extends string ? T : never;
+type FlatKeyof<T> = OnlyString<keyof T>;
 
-// export type TypedRoutes = GetRoutesInfo<typeof typedRouter>;
+type st5 = FlatNestedRouters<NestedRouter["routes"]>;
+type st5_122 = st5["/xxx"];
 
-// export type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
-//   typeof typedRouter,
-//   Path,
-//   Method
-// >;
-// export type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
-//   GetRouteResponseInfo<typeof typedRouter, Path, Method>
-// >;
+const router = express.Router();
+router.post("/", async (req, res, next) => {
+  res.send(req.body).status(200);
+});
 
-// export type RoutesWithMethod<Method extends HandlerMethods> = {
-//   [key in KeysWithMethod<TypedRoutes, Method>]: Method extends keyof TypedRoutes[key] ? RouteResponseResolver<key, Method> : never;
-// };
+const typedRouter = new TypedRouter({
+  "/": {
+    get: (req, res) => {
+      const test = res.send("Typesafe Route!").status(200);
+      return test;
+    },
+  },
+  "/test": {
+    get: (req, res) => {
+      return res.json({ message: 123 }).status(200).send("test");
+    },
+    post: (req, res) => {
+      return res.send("post res!").status(200);
+    },
+  },
+  "/post-only": {
+    post: (req, res) => {
+      return res.send("post only res!").status(200);
+    },
+  },
+  "/nested": new TypedRouter({
+    "/": {
+      get: (req, res) => {
+        const test = res.send("get /nested/").status(200);
+        return test;
+      },
+      post: (req, res) => {
+        const test = res.send("post /nested/").status(200);
+        return test;
+      },
+    },
+    "/all": {
+      all: (req, res) => {
+        return res.send("responding to all methods");
+      },
+    },
+  }),
+});
+
+// export type TypedRoutes = GetRoutesInfo<typeof typedRouter['']>;
+type TypedRoutes = FlatNestedRouters<(typeof typedRouter)["routes"]>;
+type t1 = TypedRoutes["/nested/"];
+
+type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
+  typeof typedRouter,
+  Path,
+  Method
+>;
+type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
+  GetRouteResponseInfo<typeof typedRouter, Path, Method>
+>;
+
+type RoutesWithMethod<Method extends HandlerMethods> = {
+  [key in KeysWithMethod<TypedRoutes, Method>]: Method extends keyof TypedRoutes[key] ? RouteResponseResolver<key, Method> : never;
+};
 
 // // usage
-// type HomeRouteInfo = RouteResolver<"/", "get">;
-// type HomeRouteResponse = RouteResponseResolver<"/", "get">;
+type HomeRouteInfo = RouteResolver<"/post-only", "post">;
+type HomeRouteResponse = RouteResponseResolver<"/nested/all", "all">;
 // type GetRoutesWithPostMethod = RoutesWithMethod<"get">;
