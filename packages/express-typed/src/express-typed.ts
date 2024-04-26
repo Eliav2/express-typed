@@ -21,8 +21,6 @@ export type IHandlerRequest<Req extends any[] = []> = {} & Request;
 
 export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
-// todo: support nested routes
-
 /**
  * TypedRouter is a type-safe wrapper for Express Router.
  *
@@ -68,18 +66,6 @@ export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch"
  * ```
  */
 export class TypedRouter<
-  // R extends Record<
-  //   string,
-  //   XOR<Partial<Record<HandlerMethods, (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void>>, TypedRouter<any>>
-  // >
-  // R extends {
-  //   [key: string]: XOR<
-  //     {
-  //       [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
-  //     },
-  //     TypedRouter<any>
-  //   >;
-  // }
   R extends {
     [K in string]: R[K] extends TypedRouter<infer N>
       ? TypedRouter<N>
@@ -100,8 +86,8 @@ export class TypedRouter<
     for (const path in this.routes) {
       for (const method in this.routes[path]) {
         const route = this.routes[path];
-        if (route instanceof express.Router) {
-          this.router.use(path, route as any);
+        if (route instanceof TypedRouter) {
+          this.router.use(path, route["router"]);
         } else {
           (this.router as any)[method](path, this.routes[path][method]);
         }
@@ -125,15 +111,13 @@ export type FlatNestedRouters<T> = {
 export type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
 
 export type GetRouteResponseInfoHelper<
-  Router extends TypedRouter<any>,
-  Path extends keyof FlatNestedRouters<Router["routes"]>,
-  Method extends keyof FlatNestedRouters<Router["routes"]>[Path]
+  Router extends TypedRouter<any>["routes"],
+  Path extends keyof FlatNestedRouters<Router>,
+  Method extends keyof FlatNestedRouters<Router>[Path]
 > = UnionToIntersection<
   (
     ReturnType<
-      FlatNestedRouters<Router["routes"]>[Path][Method] extends (...args: any) => any
-        ? FlatNestedRouters<Router["routes"]>[Path][Method]
-        : never
+      FlatNestedRouters<Router>[Path][Method] extends (...args: any) => any ? FlatNestedRouters<Router>[Path][Method] : never
     > extends IHandlerResponse<infer Res>
       ? Res
       : never
@@ -143,51 +127,25 @@ export type GetRouteResponseInfoHelper<
 >;
 
 export type GetRouteResponseInfo<
-  Router extends TypedRouter<any>,
-  Path extends keyof FlatNestedRouters<Router["routes"]>,
-  Method extends keyof FlatNestedRouters<Router["routes"]>[Path],
-  Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method> | undefined = undefined
-> = Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method>
+  Router extends TypedRouter<any>["routes"],
+  Path extends keyof FlatNestedRouters<Router>,
+  Method extends keyof FlatNestedRouters<Router>[Path],
+  Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method> | "body" = "body"
+  // Info extends "body" | undefined = undefined
+> = Info extends "body"
+  ? GetRouteResponseInfoHelper<Router, Path, Method>[Extract<keyof GetRouteResponseInfoHelper<Router, Path, Method>, SendMethod>]
+  : Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method>
   ? GetRouteResponseInfoHelper<Router, Path, Method>[Info]
   : GetRouteResponseInfoHelper<Router, Path, Method>;
 
-// export type InferRes<T> = T extends (infer U)[]
-//   ? U extends
+export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
 
 export type KeysWithMethod<T, Method extends string> = {
   [K in keyof T]: Method extends keyof T[K] ? K : never;
 }[keyof T];
 
-// type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
-
-/**
- * XOR is needed to have a real mutually exclusive union type
- * https://stackoverflow.com/questions/42123407/does-typescript-support-mutually-exclusive-types
- */
-type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
-type XOR<T, U> = T | U extends object ? (Without<T, U> & U) | (Without<U, T> & T) : T | U;
-
 ////////////////
 // example usage
-
-type OnlyString<T> = T extends string ? T : never;
-type FlatKeyof<T> = OnlyString<keyof T>;
-
-type NestedRouter = TypedRouter<{
-  "/": { get: any };
-  "/xxx": { get: any };
-  // "/router": TypedRouter<{ "/": { post: (req,res)=>{}, } }>;
-  "/router": TypedRouter<{ "/111": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": { all: any } }> }>;
-  "/xxxqq": TypedRouter<{ "/": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": { all: any } }> }>;
-}>;
-
-type st5 = FlatNestedRouters<NestedRouter["routes"]>;
-type st5_122 = st5["/xxx"];
-
-const router = express.Router();
-router.post("/", async (req, res, next) => {
-  res.send(req.body).status(200);
-});
 
 const typedRouter = new TypedRouter({
   "/": {
@@ -216,7 +174,7 @@ const typedRouter = new TypedRouter({
         return test;
       },
       post: (req, res) => {
-        const test = res.send("post /nested/").status(200);
+        const test = res.json("json response, post, /nested/").status(200).send("text response, post, /nested/");
         return test;
       },
     },
@@ -228,22 +186,19 @@ const typedRouter = new TypedRouter({
   }),
 });
 
-// export type TypedRoutes = GetRoutesInfo<typeof typedRouter['']>;
-type TypedRoutes = FlatNestedRouters<(typeof typedRouter)["routes"]>;
-type t1 = TypedRoutes["/nested/"];
+type TypedRoutes = ParseRoutes<typeof typedRouter>;
 
-type RouteResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = GetRouteResponseInfo<
-  typeof typedRouter,
-  Path,
-  Method
->;
-
-type RouteResponseResolver<Path extends keyof TypedRoutes, Method extends keyof TypedRoutes[Path]> = InferRes<
-  GetRouteResponseInfo<typeof typedRouter, Path, Method>
->;
-
-type RoutesWithMethod<Method extends HandlerMethods> = {
-  [key in KeysWithMethod<TypedRoutes, Method>]: Method extends keyof TypedRoutes[key] ? RouteResponseResolver<key, Method> : never;
+type RoutesWithMethod<
+  Method extends HandlerMethods
+  // Info extends keyof TypedRoutes[keyof TypedRoutes]
+  // Info extends keyof GetRouteResponseInfoHelper<TypedRoutes, keyof TypedRoutes, Method> | "body" = "body"
+> = {
+  [key in KeysWithMethod<TypedRoutes, Method>]: Method extends keyof TypedRoutes[key]
+    ? GetRouteResponseInfo<TypedRoutes, key, Method>
+    : // ? Info extends "body"
+      //   ? GetRouteResponseInfo<TypedRoutes, key, Method, Info>
+      //   : GetRouteResponseInfo<TypedRoutes, key, Method>
+      never;
 };
 
 // // usage
@@ -251,15 +206,30 @@ type RoutesWithMethod<Method extends HandlerMethods> = {
 type GetRoutesInfo<
   Path extends keyof TypedRoutes,
   Method extends keyof TypedRoutes[Path],
-  
-> = GetRouteResponseInfo<typeof typedRouter, Path, Method>;
+  Info extends keyof GetRouteResponseInfoHelper<TypedRoutes, Path, Method> | "body" = "body"
+> = GetRouteResponseInfo<TypedRoutes, Path, Method, Info>;
 
-type RouterResponseInfo = GetRoutesInfo<'/post-only','post'>;
-type HomeRouteInfoR = GetRouteResponseInfo<typeof typedRouter, "/nested/all", "all">;
-type HomeRouteInfo = RouteResolver<"/post-only", "post">;
-type HomeRouteResponse = RouteResponseResolver<"/nested/all", "all">;
-// type GetRoutesWithPostMethod = RoutesWithMethod<"get">;
+type HomeResponse = GetRoutesInfo<"/nested/", "post", "json">;
 
-type gt<T = undefined> = T extends undefined ? "no" : "yes";
-type gt_1 = gt<"zzxcz">; // type gt_1 = "yes"
-type gt_2 = gt; // type gt_2 = never
+// usage
+// get all routes that have a "get" method, and their response types
+type GetRoutes = RoutesWithMethod<"get">;
+//   ^?
+// get all routes that have a "post" method, and their response types
+type PostRoutes = RoutesWithMethod<"post">;
+//   ^?
+////
+
+type OnlyString<T> = T extends string ? T : never;
+type FlatKeyof<T> = OnlyString<keyof T>;
+
+type NestedRouter = TypedRouter<{
+  "/": { get: any };
+  "/xxx": { get: any };
+  // "/router": TypedRouter<{ "/": { post: (req,res)=>{}, } }>;
+  "/router": TypedRouter<{ "/111": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": { all: any } }> }>;
+  "/xxxqq": TypedRouter<{ "/": any; "/555": any; "/doubleNested": TypedRouter<{ "/kk": { all: any } }> }>;
+}>;
+
+type st5 = FlatNestedRouters<NestedRouter["routes"]>;
+type st5_122 = st5["/xxx"];

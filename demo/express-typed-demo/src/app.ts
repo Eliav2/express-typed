@@ -1,7 +1,7 @@
 import {TypedRouter} from "express-typed"
 import express, { Request, Response } from "express";
 import logger from "morgan";
-import typedRouter from "./router";
+import typedRouter from "./routes/index.routes";
 
 // Create Express server
 export const app = express();

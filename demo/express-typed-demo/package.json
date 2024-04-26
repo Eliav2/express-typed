@@ -9,12 +9,12 @@
     "@types/express": "^4.17.21",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.12.7",
+    "axios": "^1.6.8",
     "express": "^4.19.2",
-    "morgan": "^1.10.0",
-    "express-typed": "workspace:*"
+    "express-typed": "workspace:*",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "tsx": "^4.7.2"
   }
 }
-  
