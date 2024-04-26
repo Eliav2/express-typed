@@ -22,8 +22,7 @@
   },
   "peerDependencies": {
     "express": "*",
-    "@types/express": "*",
-    "@types/express-serve-static-core": "*"
+    "@types/express": "*"
   },
   "dependencies": {
   },

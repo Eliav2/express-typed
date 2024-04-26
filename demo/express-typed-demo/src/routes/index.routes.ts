@@ -34,7 +34,7 @@ const typedRouter = new TypedRouter({
 export default typedRouter;
 
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
-//   ^?
+//          ^?
 
 //// RouteResolver
 export type RouteResolver<

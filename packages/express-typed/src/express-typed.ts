@@ -1,5 +1,4 @@
-import express from "express";
-import type { Request, Response, NextFunction } from "express-serve-static-core";
+import express, { Request, Response, NextFunction } from "express";
 
 export type IHandlerResponse<Res extends any[] = []> = {
   status<const T>(arg: T): IHandlerResponse<[...Res, { status: T }]>;
