@@ -76,7 +76,9 @@ app.listen(3000, () => {
 
 ## Demo
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/Eliav2/express-typed/tree/ft/better-demo?startScript=start-demo)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/Eliav2/express-typed/tree/ft/better-demo?startScript=start-demo&file=examples/fullstack_react_express-typed/express-typed-demo/src/routes/index.routes.ts&file=examples/fullstack_react_express-typed/frontend-demo/src/App.tsx)
+
+This demo opens a fullstack react+express project in StackBlitz, demonstrating end-to-end type safety with express-typed on the left pane and a simple react app on the right pane. play with the types on the backend and watch them replect on the frontend immediately.
 
 ## Contributing
 
