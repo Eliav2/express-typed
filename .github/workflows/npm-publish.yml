@@ -11,6 +11,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          registry-url: "https://registry.npmjs.org"
       - uses: pnpm/action-setup@v3
         name: Install pnpm
         with:
@@ -33,7 +34,7 @@ jobs:
         working-directory: packages/express-typed
       # no need to build the package, prepublish script will take care of it
       - name: Publish package on NPM 📦
-        run: pnpm publish
+        run: npm publish
         working-directory: packages/express-typed
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
