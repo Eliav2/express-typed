@@ -1,7 +1,5 @@
 # express-typed
 
-_Not stable yet_
-
 [![npm version](https://badge.fury.io/js/express-typed.svg)](https://www.npmjs.com/package/express-typed)
 [![npm downloads](https://img.shields.io/npm/dm/express-typed.svg)](https://www.npmjs.com/package/express-typed)
 
