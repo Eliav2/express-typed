@@ -16,13 +16,14 @@
   "license": "ISC",
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/express-serve-static-core": "^4.19.0",
+    "@types/qs": "^6.9.15",
     "express": "^4.19.2",
-    "typescript": "^5.4.2",
-    "@types/express-serve-static-core": "^4.19.0"
+    "typescript": "^5.4.2"
   },
   "peerDependencies": {
-    "express": "*",
-    "@types/express": "*"
+    "@types/express": "*",
+    "express": "*"
   },
   "files": [
     "dist"

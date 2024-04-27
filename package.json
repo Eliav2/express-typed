@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "vitest --typecheck"
+  },
   "dependencies": {
     "express-typed": "workspace:*"
   },
@@ -13,5 +15,11 @@
   "license": "ISC",
   "prettier": {
     "printWidth": 140
+  },
+  "devDependencies": {
+    "@vitest/ui": "^1.5.2",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.0",
+    "vitest": "^1.5.2"
   }
 }
