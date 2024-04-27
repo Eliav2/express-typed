@@ -1,6 +1,6 @@
 {
   "name": "express-typed",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "type": "module",
   "main": "dist/express-typed.js",
@@ -23,8 +23,6 @@
   "peerDependencies": {
     "express": "*",
     "@types/express": "*"
-  },
-  "dependencies": {
   },
   "files": [
     "dist"
