@@ -1,4 +1,0 @@
-packages:
-  - "express-typed-demo"
-  - "frontend-demo"
-  - "../../packages/express-typed"
