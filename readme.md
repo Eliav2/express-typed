@@ -27,7 +27,7 @@ npm install express-typed
 
 ## Usage
 
-express-typed is focused on your express routers, because that's where you define your API routes.
+express-typed is focused on your express routers because that's where you define your API routes, and that's what's important for end-to-end type-safety.
 
 use `TypedRouter` from `express-typed` instead of `express.Router`, the rest of the code remains the same:
 
@@ -78,7 +78,7 @@ app.listen(3000, () => {
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/Eliav2/express-typed/tree/ft/better-demo?startScript=start-demo&file=examples/fullstack_react_express-typed/express-typed-demo/src/routes/index.routes.ts&file=examples/fullstack_react_express-typed/frontend-demo/src/App.tsx)
 
-This demo opens a fullstack react+express project in StackBlitz, demonstrating end-to-end type safety with express-typed on the left pane and a simple react app on the right pane. play with the types on the backend and watch them replect on the frontend immediately.
+This demo opens a full-stack react+express project in StackBlitz, demonstrating end-to-end type safety with express-typed on the left pane and a simple react app on the right pane. play with the types on the backend and watch them reflect on the frontend immediately.
 
 ## Contributing
 
