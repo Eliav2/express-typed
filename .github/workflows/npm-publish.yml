@@ -33,7 +33,7 @@ jobs:
         working-directory: packages/express-typed
       # no need to build the package, prepublish script will take care of it
       - name: Publish package on NPM 📦
-        run: npm publish
+        run: pnpm publish
         working-directory: packages/express-typed
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
