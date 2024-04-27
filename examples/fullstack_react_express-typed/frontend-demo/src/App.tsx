@@ -1,5 +1,5 @@
 import "./App.css";
-import { useAppQuery } from "./queries.ts";
+import { useAppQuery } from "./queries";
 
 const ReactQueryApp = () => {
   const query = useAppQuery("/mutate", "post");
