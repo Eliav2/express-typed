@@ -60,7 +60,7 @@ export type RoutesWithMethod<Method extends HandlerMethods> = {
 // usage
 // get all routes that have a "get" method, and their response types
 type GetRoutes = RoutesWithMethod<"get">;
-//   ^?
+//   ^? type GetRoutes = { "/": "Hello world"}; 
 // get all routes that have a "post" method, and their response types
 type PostRoutes = RoutesWithMethod<"post">;
 //   ^?
