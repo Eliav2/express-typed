@@ -1,25 +1,14 @@
 import "./App.css";
 import { useAppQuery } from "./queries";
 
-const ReactQueryApp = () => {
-  const query = useAppQuery('/nested/another','get');
+function App() {
+  const query = useAppQuery("/", "get");
   const data = query.data;
-  //    ^?
+  //    ^? const query: UseQueryResult<"Hello world", Error>
+
   console.log("data", data);
 
-  return (
-    <>
-      <div>response: {JSON.stringify(data)}</div>;
-    </>
-  );
-};
-
-function App() {
-  return (
-    <>
-      <ReactQueryApp />
-    </>
-  );
+  return <>{JSON.stringify(data)}</>;
 }
 
 export default App;
