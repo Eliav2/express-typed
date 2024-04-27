@@ -1,12 +1,10 @@
 name: Publish to NPM
-# on:
-#   release:
-#     types: [created]
 on:
   push:
     branches:
       - main
-
+    paths:
+      - "packages/express-typed/package.json"
 permissions:
   contents: write
 jobs:
@@ -35,7 +33,6 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
-
       - name: Install dependencies
         run: pnpm install
         working-directory: packages/express-typed
@@ -48,7 +45,7 @@ jobs:
         run: echo version=v$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
         working-directory: packages/express-typed
       - name: Publish package on NPM 📦
-        run: npm publish --tag alpha
+        run: npm publish
         working-directory: packages/express-typed
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
