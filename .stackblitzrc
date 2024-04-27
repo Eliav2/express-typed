@@ -1,0 +1,3 @@
+{
+  "startCommand": "pnpm -C ./examples/fullstack_react_express-typed dev"
+}
