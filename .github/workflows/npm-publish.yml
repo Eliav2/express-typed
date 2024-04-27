@@ -46,7 +46,6 @@ jobs:
       - name: get version
         id: get_version
         run: echo version=v$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
-        # run: echo ::set-output name=VERSION::$(node -p "require('./package.json').version")
       - name: Publish package on NPM 📦
         run: npm publish --tag alpha
         working-directory: packages/express-typed
@@ -64,8 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          needs: build-and-push
-          run: gh release create "${{ needs.build-and-push.outputs.version }}" \
+          gh release create "${{ needs.build-and-push.outputs.version }}" \
             --repo="$GITHUB_REPOSITORY" \
             --title="${GITHUB_REPOSITORY#*/} ${{ needs.build-and-push.outputs.version }}" \
             --generate-notes
