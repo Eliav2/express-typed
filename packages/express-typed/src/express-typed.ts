@@ -13,7 +13,6 @@ export type IHandlerResponse<Res extends any[] = []> = {
   jsonp<const T>(arg: T): IHandlerResponse<[...Res, { jsonp: T }]>;
   send<const T>(arg: T): IHandlerResponse<[...Res, { send: T }]>;
 } & Response;
-
 export type SendMethod = "send" | "json" | "jsonp";
 
 export type IHandlerRequest<Req extends any[] = []> = {} & Request;
@@ -32,7 +31,7 @@ export class TypedRouter<
               [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
             }
           | TypedRouter<any>;
-  }
+  },
 > {
   router: express.Router;
   routes: R;
@@ -59,7 +58,7 @@ export type FlatNestedRouters<T> = {
     ? (
         x: T[K] extends TypedRouter<infer N>
           ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
-          : Pick<T, K>
+          : Pick<T, K>,
       ) => void
     : never;
 } extends { [k: string]: (x: infer I) => void }
@@ -71,7 +70,7 @@ export type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) ex
 export type GetRouteResponseInfoHelper<
   Router extends TypedRouter<any>["routes"],
   Path extends keyof FlatNestedRouters<Router>,
-  Method extends keyof FlatNestedRouters<Router>[Path]
+  Method extends keyof FlatNestedRouters<Router>[Path],
 > = UnionToIntersection<
   (
     ReturnType<
@@ -88,13 +87,13 @@ export type GetRouteResponseInfo<
   Router extends TypedRouter<any>["routes"],
   Path extends keyof FlatNestedRouters<Router>,
   Method extends keyof FlatNestedRouters<Router>[Path],
-  Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method> | "body" = "body"
+  Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method> | "body" = "body",
   // Info extends "body" | undefined = undefined
 > = Info extends "body"
   ? GetRouteResponseInfoHelper<Router, Path, Method>[Extract<keyof GetRouteResponseInfoHelper<Router, Path, Method>, SendMethod>]
   : Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method>
-  ? GetRouteResponseInfoHelper<Router, Path, Method>[Info]
-  : GetRouteResponseInfoHelper<Router, Path, Method>;
+    ? GetRouteResponseInfoHelper<Router, Path, Method>[Info]
+    : GetRouteResponseInfoHelper<Router, Path, Method>;
 
 export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
 
