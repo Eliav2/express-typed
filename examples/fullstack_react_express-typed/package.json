@@ -1,0 +1,15 @@
+{
+  "name": "fullstack_react_express-typed",
+  "private": true,
+  "version": "1.0.0",
+  "description": "express-typed fullstack example",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express-typed": "workspace:*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
