@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "prepublish": "pnpm build",
+    "prepublishOnly": "pnpm build",
     "test": "vitest"
   },
   "keywords": [],
