@@ -1,5 +1,4 @@
-import {TypedRouter} from "express-typed"
-import express, { Request, Response } from "express";
+import express from "express";
 import logger from "morgan";
 import typedRouter from "./routes/index.routes";
 
@@ -11,12 +10,6 @@ app.use(logger("dev"));
 // Parse incoming requests data
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// const router = express.Router();
-
-// router.get("/", async (req: Request, res: Response) => {
-//   res.send("Hello World!").status(200);
-// });
 
 app.use("/", typedRouter.router);
 
