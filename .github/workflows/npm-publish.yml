@@ -46,24 +46,26 @@ jobs:
       - name: get version
         id: get_version
         run: echo version=v$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
+        # run: echo ::set-output name=VERSION::$(node -p "require('./package.json').version")
       - name: Publish package on NPM 📦
         run: npm publish --tag alpha
         working-directory: packages/express-typed
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
 
   release:
     name: Release pushed tag
     runs-on: ubuntu-latest
     needs: build-and-push
     steps:
-      # - name: install image dependencies
-      #   run: apt update && apt install -y gh
       - name: Create release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ needs.get_version.outputs.version }}" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="${GITHUB_REPOSITORY#*/} ${{ needs.get_version.outputs.version }}" \
-              --generate-notes
+          needs: build-and-push
+          run: gh release create "${{ needs.build-and-push.outputs.version }}" \
+            --repo="$GITHUB_REPOSITORY" \
+            --title="${GITHUB_REPOSITORY#*/} ${{ needs.build-and-push.outputs.version }}" \
+            --generate-notes
