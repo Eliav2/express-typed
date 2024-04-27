@@ -46,6 +46,7 @@ jobs:
       - name: get version
         id: get_version
         run: echo version=v$(node -p "require('./package.json').version") >> $GITHUB_OUTPUT
+        working-directory: packages/express-typed
       - name: Publish package on NPM 📦
         run: npm publish --tag alpha
         working-directory: packages/express-typed
