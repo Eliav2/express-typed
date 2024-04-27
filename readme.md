@@ -5,9 +5,9 @@ _Not stable yet_
 [![npm version](https://badge.fury.io/js/express-typed.svg)](https://www.npmjs.com/package/express-typed)
 [![npm downloads](https://img.shields.io/npm/dm/express-typed.svg)](https://www.npmjs.com/package/express-typed)
 
-Express-Typed is an end-to-end TypeScript wrapper for Express.js, designed to streamline the development process by providing strong typing support throughout your Express application.
+express-typed is an end-to-end TypeScript wrapper for Express.js, designed to streamline the development process by providing strong typing support throughout your Express application.
 
-Express-Typed **infers types from your backend codebase**, unlike libraries such as [ts-rest](https://ts-rest.com/) and [zodios](https://www.zodios.org/), which often require separate type definitions. This approach offers a developer experience akin to [trpc](https://trpc.io/), just in expressjs, without the need to switch to an entirely different framework.
+express-typed **infers types from your backend codebase**, unlike libraries such as [ts-rest](https://ts-rest.com/) and [zodios](https://www.zodios.org/), which often require separate type definitions. This approach offers a developer experience akin to [trpc](https://trpc.io/), just in expressjs, without the need to switch to an entirely different framework.
 
 ## Installation
 
@@ -76,8 +76,8 @@ app.listen(3000, () => {
 
 ## Contributing
 
-This library is still in its early stages, and thats exactly the time to suggest significant changes.
+This library is still in its early stages, and that's exactly the time to suggest significant changes.
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or submit a pull request on GitHub.
 
-The technic that was used in this lib create similar typesafe adapters for other backend frameworks like Fastify, Koa, etc.
+The technique that was used in this lib creates similar typesafe adapters for other backend frameworks like Fastify, Koa, etc.
