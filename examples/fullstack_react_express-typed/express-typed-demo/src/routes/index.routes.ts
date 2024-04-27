@@ -28,18 +28,7 @@ const typedRouter = new TypedRouter({
     },
   },
   // nested routers also supported
-  "/nested": new TypedRouter({
-    "/": {
-      get: (req, res) => {
-        return res.send("even-more-nested").status(200);
-      },
-    },
-    "/another": {
-      get: (req, res) => {
-        return res.send("another").status(200);
-      },
-    },
-  }),
+  "/nested": nestedRouter,
 });
 
 export default typedRouter;
