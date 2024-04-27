@@ -9,6 +9,8 @@ express-typed is an end-to-end TypeScript wrapper for Express.js, designed to st
 
 express-typed **infers types from your backend codebase**, unlike libraries such as [ts-rest](https://ts-rest.com/) and [zodios](https://www.zodios.org/), which often require separate type definitions. This approach offers a developer experience akin to [trpc](https://trpc.io/), just in expressjs, without the need to switch to an entirely different framework.
 
+![express-typed-gif](https://github.com/Eliav2/express-typed/assets/47307889/9c8d9406-73b8-4932-8312-282c9e56988d)
+
 ## Installation
 
 You can install express-typed via npm:
@@ -27,7 +29,7 @@ npm install express-typed
 
 ## Usage
 
-express-typed is focused on your express routers because that's where you define your API routes, and that's what's important for end-to-end type-safety.
+express-typed is focused on your express routers because that's where you define your API routes, and that's what's important for end-to-end type safety.
 
 use `TypedRouter` from `express-typed` instead of `express.Router`, the rest of the code remains the same:
 
