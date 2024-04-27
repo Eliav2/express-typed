@@ -63,7 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ needs.build-and-push.outputs.version }}" \
+          gh release create "${{ needs.get_version.outputs.version }}" \
               --repo="$GITHUB_REPOSITORY" \
-              --title="${GITHUB_REPOSITORY#*/} ${{ needs.build-and-push.outputs.version }}" \
+              --title="${GITHUB_REPOSITORY#*/} ${{ needs.get_version.outputs.version }}" \
               --generate-notes

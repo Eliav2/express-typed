@@ -1,6 +1,6 @@
 {
   "name": "express-typed",
-  "version": "0.1.1-alpha.3",
+  "version": "0.1.1-alpha.4",
   "description": "",
   "type": "module",
   "main": "dist/express-typed.js",
