@@ -170,7 +170,7 @@ test("GetRouteResponseInfo", () => {
 // Test RoutesWithMethod
 test("RoutesWithMethod", () => {
   const testGetRoutes: RoutesWithMethod<"get"> = {
-    "/2": "Typesafe Route!",
+    "/": "Typesafe Route!",
     "/test": "test",
     "/nested/": "get /nested/",
   };

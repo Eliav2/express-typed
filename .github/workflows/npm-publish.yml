@@ -33,6 +33,9 @@ jobs:
         run: pnpm install
         working-directory: packages/express-typed
       # no need to build the package, prepublish script will take care of it
+      - name: Run tests
+        run: pnpm test
+        working-directory: packages/express-typed
       - name: Publish package on NPM 📦
         run: npm publish
         working-directory: packages/express-typed
