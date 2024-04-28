@@ -1,13 +1,8 @@
 name: Update Changelog
 
 on:
-  #  release:
-  #    types: [published]
-  push:
-    branches:
-      - dev
-#    paths:
-#      - "CHANGELOG.md"
+  release:
+    types: [published]
 
 jobs:
   update-changelog:
@@ -17,12 +12,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # fetch complete history so auto-changelog can see it
+          fetch-depth: 0 # fetch complete history so auto-changelog can see it
 
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: "14"
 
       - name: Install auto-changelog
         run: npm install -g auto-changelog
