@@ -13,6 +13,6 @@ const useAppMutation = <Path extends keyof AppRoutes, Method extends keyof AppRo
   return mutation;
 };
 
-// completly type safe
+// completely type safe
 const testMutation = useAppMutation("/mutate", "post");
 testMutation.mutate({ name: "test" });
