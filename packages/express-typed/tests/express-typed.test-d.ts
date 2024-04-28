@@ -2,8 +2,8 @@ import {
   FlatNestedRouters,
   GetRouteResponseInfo,
   GetRouteResponseInfoHelper,
-  HandlerMethods,
-  KeysWithMethod,
+  GetRouterMethods,
+  GetRoutesWithMethod,
   ParseRoutes,
   TypedRouter,
 } from "../src/express-typed";
@@ -70,43 +70,41 @@ type HomePageStatus = RouteResolver<"/", "get", "status">;
 //   ^?
 ////
 
-//// RoutesWithMethod
-export type RoutesWithMethod<Method extends HandlerMethods> = {
-  [key in KeysWithMethod<AppRoutes, Method>]: Method extends keyof AppRoutes[key] ? GetRouteResponseInfo<AppRoutes, key, Method> : never;
-};
+// type testKeysWithMethod = KeysWithMethod<typeof typedRouter, "post">;
 
-// usage
-// get all routes that have a "get" method, and their response types
-type GetRoutes = RoutesWithMethod<"get">;
-//   ^?
-// get all routes that have a "post" method, and their response types
-type PostRoutes = RoutesWithMethod<"post">;
-//   ^?
-////
+test("RoutesWithMethod", () => {
+  //// RoutesWithMethod
+  type RoutesWithMethod<Method extends GetRouterMethods<AppRoutes>> = GetRoutesWithMethod<AppRoutes, Method>;
 
-import { expect, expectTypeOf, test } from "vitest";
+  // usage
+  // get all routes that have a "get" method, and their response types
+  type GetRoutes = RoutesWithMethod<"get">;
+  //   ^?
 
-// Test TypedRouter
-test("TypedRouter", () => {
-  const typedRouter = new TypedRouter({
-    "/": {
-      get: (req, res) => {
-        const test = res.send("Typesafe Route!").status(200);
-        return test;
-      },
-    },
-    "/test": {
-      get: (req, res) => {
-        return res.json({ message: 123 }).status(200).send("test");
-      },
-      post: (req, res) => {
-        return res.send("post res!").status(200);
-      },
-    },
-  });
+  expectTypeOf<GetRoutes>().toEqualTypeOf<{
+    "/": "Typesafe Route!";
+    "/test":
+      | {
+          readonly message: 123;
+        }
+      | "test";
+    "/nested/": "get /nested/";
+  }>();
 
-  expect(typedRouter).toBeDefined();
+  // get all routes that have a "post" method, and their response types
+  type PostRoutes = RoutesWithMethod<"post">;
+  //   ^?
+
+  expectTypeOf<PostRoutes>().toEqualTypeOf<{
+    "/test": "post res!";
+    "/post-only": "post only res!";
+    "/nested/": "json response, post, /nested/" | "text response, post, /nested/";
+  }>();
+
+  ////
 });
+
+import { expectTypeOf, test } from "vitest";
 
 // Test ParseRoutes
 test("ParseRoutes", () => {
@@ -164,20 +162,6 @@ test("GetRouteResponseInfo", () => {
   type TestResponse = GetRouteResponseInfo<TestRoutes, "/test", "get">;
   const testResponse: TestResponse = {
     message: 123,
-  };
-});
-
-// Test RoutesWithMethod
-test("RoutesWithMethod", () => {
-  const testGetRoutes: RoutesWithMethod<"get"> = {
-    "/": "Typesafe Route!",
-    "/test": "test",
-    "/nested/": "get /nested/",
-  };
-  const testPostRoutes: RoutesWithMethod<"post"> = {
-    "/test": "post res!",
-    "/post-only": "post only res!",
-    "/nested/": "text response, post, /nested/",
   };
 });
 

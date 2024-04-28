@@ -1,4 +1,4 @@
-import { GetRouteResponseInfo, TypedRouter, ParseRoutes, GetRouteResponseInfoHelper, HandlerMethods, KeysWithMethod } from "express-typed";
+import { GetRouteResponseInfo, GetRouteResponseInfoHelper, GetRouterMethods, GetRoutesWithMethod, ParseRoutes, TypedRouter } from "express-typed";
 
 import nestedRouter from "./nested.routes";
 
@@ -53,9 +53,7 @@ type HomePageStatus = RouteResolver<"/", "get", "status">;
 ////
 
 //// RoutesWithMethod
-export type RoutesWithMethod<Method extends HandlerMethods> = {
-  [key in KeysWithMethod<AppRoutes, Method>]: Method extends keyof AppRoutes[key] ? GetRouteResponseInfo<AppRoutes, key, Method> : never;
-};
+export type RoutesWithMethod<Method extends GetRouterMethods<AppRoutes>> = GetRoutesWithMethod<AppRoutes, Method>;
 
 // usage
 // get all routes that have a "get" method, and their response types

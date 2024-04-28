@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
     "esModuleInterop": true,
     "target": "esnext",
     "noImplicitAny": true,
@@ -11,6 +10,6 @@
     "skipLibCheck": true,
     "strict": true
   },
-  "include": ["backend/src/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]
 }
