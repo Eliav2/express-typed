@@ -1,22 +1,26 @@
 import express, { Request, Response, NextFunction } from "express";
 
-export type IHandlerResponse<Res extends any[] = []> = {
-  status<const T>(arg: T): IHandlerResponse<[...Res, { status: T }]>;
-  links<const T>(arg: T): IHandlerResponse<[...Res, { links: T }]>;
-  sendStatus<const T>(arg: T): IHandlerResponse<[...Res, { sendStatus: T }]>;
-  contentType<const T>(arg: T): IHandlerResponse<[...Res, { contentType: T }]>;
-  type<const T>(arg: T): IHandlerResponse<[...Res, { type: T }]>;
-  format<const T>(arg: T): IHandlerResponse<[...Res, { format: T }]>;
-  attachment<const T>(arg: T): IHandlerResponse<[...Res, { attachment: T }]>;
+// Patches the Response object with extra information, so that can later be extracted
+export type TypedResponse<Res extends any[] = []> = {
+  status<const T>(arg: T): TypedResponse<[...Res, { status: T }]>;
+  links<const T>(arg: T): TypedResponse<[...Res, { links: T }]>;
+  sendStatus<const T>(arg: T): TypedResponse<[...Res, { sendStatus: T }]>;
+  contentType<const T>(arg: T): TypedResponse<[...Res, { contentType: T }]>;
+  type<const T>(arg: T): TypedResponse<[...Res, { type: T }]>;
+  format<const T>(arg: T): TypedResponse<[...Res, { format: T }]>;
+  attachment<const T>(arg: T): TypedResponse<[...Res, { attachment: T }]>;
 
-  json<const T>(arg: T): IHandlerResponse<[...Res, { json: T }]>;
-  jsonp<const T>(arg: T): IHandlerResponse<[...Res, { jsonp: T }]>;
-  send<const T>(arg: T): IHandlerResponse<[...Res, { send: T }]>;
+  json<const T>(arg: T): TypedResponse<[...Res, { json: T }]>;
+  jsonp<const T>(arg: T): TypedResponse<[...Res, { jsonp: T }]>;
+  send<const T>(arg: T): TypedResponse<[...Res, { send: T }]>;
 } & Response;
+
+// The different methods that can be used to send a response, those have special meaning
 export type SendMethod = "send" | "json" | "jsonp";
 
-export type IHandlerRequest<Req extends any[] = []> = {} & Request;
+export type TypedRequest<Req extends any[] = []> = {} & Request;
 
+// The different methods that can be used to handle a request
 export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
 /**
@@ -28,10 +32,10 @@ export class TypedRouter<
       ? TypedRouter<N>
       :
           | {
-              [key in HandlerMethods]?: (req: IHandlerRequest, res: IHandlerResponse, next: NextFunction) => void;
+              [key in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
             }
           | TypedRouter<any>;
-  },
+  }
 > {
   router: express.Router;
   routes: R;
@@ -53,29 +57,39 @@ export class TypedRouter<
   }
 }
 
+// extract any relevant information from TypedRouter, and flatten any nested routers
+export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
+
+// flatten any nested routers
 export type FlatNestedRouters<T> = {
   [K in keyof T]: K extends string
     ? (
         x: T[K] extends TypedRouter<infer N>
           ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
-          : Pick<T, K>,
+          : Pick<T, K>
       ) => void
     : never;
 } extends { [k: string]: (x: infer I) => void }
   ? { [K in keyof I]: I[K] }
   : never;
 
+// https://stackoverflow.com/a/50375286/12371242
 export type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
 
+/**
+ * Get the response info for a given route and method
+ * for example
+ *    GetRouteResponseInfoHelper<typeof typedRouter, "/", "get"> might return { status: 200, send: "Hello world" }
+ */
 export type GetRouteResponseInfoHelper<
   Router extends TypedRouter<any>["routes"],
   Path extends keyof FlatNestedRouters<Router>,
-  Method extends keyof FlatNestedRouters<Router>[Path],
+  Method extends keyof FlatNestedRouters<Router>[Path]
 > = UnionToIntersection<
   (
     ReturnType<
       FlatNestedRouters<Router>[Path][Method] extends (...args: any) => any ? FlatNestedRouters<Router>[Path][Method] : never
-    > extends IHandlerResponse<infer Res>
+    > extends TypedResponse<infer Res>
       ? Res
       : never
   ) extends (infer U)[]
@@ -83,20 +97,44 @@ export type GetRouteResponseInfoHelper<
     : never
 >;
 
+/**
+ * Get the response info for a given route, method, and info type
+ * for example
+ *  - GetRouteResponseInfo<typeof typedRouter, "/", "get"> might return "Hello world"
+ *  - GetRouteResponseInfo<typeof typedRouter, "/", "get", "status"> might return 200
+ */
 export type GetRouteResponseInfo<
   Router extends TypedRouter<any>["routes"],
   Path extends keyof FlatNestedRouters<Router>,
   Method extends keyof FlatNestedRouters<Router>[Path],
-  Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method> | "body" = "body",
+  Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method> | "body" = "body"
   // Info extends "body" | undefined = undefined
 > = Info extends "body"
   ? GetRouteResponseInfoHelper<Router, Path, Method>[Extract<keyof GetRouteResponseInfoHelper<Router, Path, Method>, SendMethod>]
   : Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method>
-    ? GetRouteResponseInfoHelper<Router, Path, Method>[Info]
-    : GetRouteResponseInfoHelper<Router, Path, Method>;
+  ? GetRouteResponseInfoHelper<Router, Path, Method>[Info]
+  : GetRouteResponseInfoHelper<Router, Path, Method>;
 
-export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
+/**
+ * Get all the keys in the router that have a specific method
+ * for example, KeysWithMethod<typeof typedRouter, "get"> might return "/" | "/nested"
+ */
+export type KeysWithMethod<Router extends TypedRouter<any>, Method extends GetRouterMethods<Router>> = {
+  [K in keyof ParseRoutes<Router>]: Method extends keyof ParseRoutes<Router>[K] ? K : never;
+}[keyof ParseRoutes<Router>];
 
-export type KeysWithMethod<T, Method extends string> = {
-  [K in keyof T]: Method extends keyof T[K] ? K : never;
-}[keyof T];
+/**
+ * Get all the existing methods for any endpoint in the router
+ * for example, GetRouterMethods<typeof typedRouter> might return "get" | "post" | "all" or something similar, if those are the methods are defined on some of the endpoints in the router
+ */
+export type GetRouterMethods<Router extends TypedRouter<any>> = keyof UnionToIntersection<ParseRoutes<Router>[keyof ParseRoutes<Router>]>;
+
+/**
+ * Get all the routes in the router that have a specific method
+ * for example, GetRoutesWithMethod<typeof typedRouter, "get"> might return { "/": "Hello world", "/nested": "get /nested/" }
+ */
+export type GetRoutesWithMethod<Router extends TypedRouter<any>, Method extends GetRouterMethods<Router>> = {
+  [Path in KeysWithMethod<Router, Method>]: Method extends keyof ParseRoutes<Router>[Path]
+    ? GetRouteResponseInfo<ParseRoutes<Router>, Path, Method>
+    : never;
+};

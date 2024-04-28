@@ -240,7 +240,9 @@ This library is still in its early stages, and that's exactly the time to sugges
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or submit a pull request on GitHub.
 
-The technique that was used in this lib creates similar typesafe adapters for other backend frameworks like Fastify, Koa, etc.
+The technique that was used in this lib could be used to create similar typesafe adapters for other backend frameworks like Fastify, Koa, etc.
+
+**Pull requests to the dev branch only, please.**
 
 ## roadmap
 
@@ -248,3 +250,5 @@ The technique that was used in this lib creates similar typesafe adapters for ot
 - [x] nested routers support
 - [x] backend return type inference(the type that the backend returns)
 - [ ] backend request type inference(the type that the backend expects in the request)
+- [ ] type-safe path parameters
+- [ ] type-safe query parameters

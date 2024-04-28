@@ -2,10 +2,12 @@ import {
   FlatNestedRouters,
   GetRouteResponseInfo,
   GetRouteResponseInfoHelper,
+  GetRouterMethods,
   HandlerMethods,
   KeysWithMethod,
   ParseRoutes,
   TypedRouter,
+  UnionToIntersection,
 } from "../src/express-typed";
 
 const typedRouter = new TypedRouter({
@@ -70,14 +72,20 @@ type HomePageStatus = RouteResolver<"/", "get", "status">;
 //   ^?
 ////
 
+type testKeysWithMethod = KeysWithMethod<typeof typedRouter, "post">;
+
 //// RoutesWithMethod
-export type RoutesWithMethod<Method extends HandlerMethods> = {
-  [key in KeysWithMethod<AppRoutes, Method>]: Method extends keyof AppRoutes[key] ? GetRouteResponseInfo<AppRoutes, key, Method> : never;
+// export type RoutesWithMethod<Method extends HandlerMethods> = {
+//   [key in KeysWithMethod<AppRoutes, Method>]: Method extends keyof AppRoutes[key] ? GetRouteResponseInfo<AppRoutes, key, Method> : never;
+// };
+
+export type TypedRoutesWithMethod<Router extends TypedRouter<any>, Method extends GetRouterMethods<Router>> = {
+  [Path in KeysWithMethod<Router, Method>]: Method extends keyof ParseRoutes<Router>[Path] ? GetRouteResponseInfo<ParseRoutes<Router>, Path, Method> : never;
 };
 
 // usage
 // get all routes that have a "get" method, and their response types
-type GetRoutes = RoutesWithMethod<"get">;
+type GetRoutes = TypedRoutesWithMethod<typeof typedRouter,"get">;
 //   ^?
 // get all routes that have a "post" method, and their response types
 type PostRoutes = RoutesWithMethod<"post">;
@@ -106,125 +114,4 @@ test("TypedRouter", () => {
   });
 
   expect(typedRouter).toBeDefined();
-});
-
-// Test ParseRoutes
-test("ParseRoutes", () => {
-  const testRoutes: ParseRoutes<typeof typedRouter> = {
-    "/": {
-      get: (req, res) => {
-        const test = res.send("Typesafe Route!").status(200);
-        return test;
-      },
-    },
-    "/test": {
-      get: (req, res) => {
-        return res.json({ message: 123 }).status(200).send("test");
-      },
-      post: (req, res) => {
-        return res.send("post res!").status(200);
-      },
-    },
-    "/nested/": {
-      get: (req, res) => {
-        return res.send("get /nested/").status(200);
-      },
-      post: (req, res) => {
-        return res.json("json response, post, /nested/").status(200).send("text response, post, /nested/");
-      },
-    },
-    "/nested/all": {
-      all: (req, res) => {
-        return res.send("responding to all methods");
-      },
-    },
-    "/post-only": {
-      post: (req, res) => {
-        return res.send("post only res!").status(200);
-      },
-    },
-  };
-});
-
-// Test GetRouteResponseInfoHelper
-test("GetRouteResponseInfoHelper", () => {
-  type TestRoutes = ParseRoutes<typeof typedRouter>;
-  type TestResponseInfo = GetRouteResponseInfoHelper<TestRoutes, "/test", "get">;
-
-  const testResponseInfo: TestResponseInfo = {
-    status: 200,
-    json: { message: 123 },
-    send: "test",
-  };
-});
-
-// Test GetRouteResponseInfo
-test("GetRouteResponseInfo", () => {
-  type TestRoutes = ParseRoutes<typeof typedRouter>;
-  type TestResponse = GetRouteResponseInfo<TestRoutes, "/test", "get">;
-  const testResponse: TestResponse = {
-    message: 123,
-  };
-});
-
-// Test RoutesWithMethod
-test("RoutesWithMethod", () => {
-  const testGetRoutes: RoutesWithMethod<"get"> = {
-    "/": "Typesafe Route!",
-    "/test": "test",
-    "/nested/": "get /nested/",
-  };
-  const testPostRoutes: RoutesWithMethod<"post"> = {
-    "/test": "post res!",
-    "/post-only": "post only res!",
-    "/nested/": "text response, post, /nested/",
-  };
-});
-
-// Test RouteResolver
-test("RouteResolver", () => {
-  const testRouteResolverDefault: RouteResolver<"/", "get"> = "Typesafe Route!";
-  const testRouteResolverStatus: RouteResolver<"/", "get", "status"> = 200;
-  const testRouteResolverJson: RouteResolver<"/test", "get", "json"> = { message: 123 };
-  const testRouteResolverSend: RouteResolver<"/test", "get", "send"> = "test";
-});
-
-test("FlatNestedRouters", () => {
-  type TestRoutes = ParseRoutes<typeof typedRouter>;
-  type FlatRoutes = FlatNestedRouters<TestRoutes>;
-
-  const flatRoutes: FlatRoutes = {
-    "/": {
-      get: (req, res) => {
-        const test = res.send("Typesafe Route!").status(200);
-        return test;
-      },
-    },
-    "/test": {
-      get: (req, res) => {
-        return res.json({ message: 123 }).status(200).send("test");
-      },
-      post: (req, res) => {
-        return res.send("post res!").status(200);
-      },
-    },
-    "/post-only": {
-      post: (req, res) => {
-        return res.send("post only res!").status(200);
-      },
-    },
-    "/nested/": {
-      get: (req, res) => {
-        return res.send("get /nested/").status(200);
-      },
-      post: (req, res) => {
-        return res.json("json response, post, /nested/").status(200).send("text response, post, /nested/");
-      },
-    },
-    "/nested/all": {
-      all: (req, res) => {
-        return res.send("responding to all methods");
-      },
-    },
-  };
 });

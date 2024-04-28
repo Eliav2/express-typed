@@ -28,6 +28,34 @@ importers:
         specifier: ^1.5.2
         version: 1.5.2(@types/node@20.12.7)(@vitest/ui@1.5.2)
 
+  examples/express-typed-prisma:
+    dependencies:
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.21
+      '@types/morgan':
+        specifier: ^1.9.9
+        version: 1.9.9
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.12.7
+      axios:
+        specifier: ^1.6.8
+        version: 1.6.8
+      express:
+        specifier: ^4.19.2
+        version: 4.19.2
+      express-typed:
+        specifier: workspace:*
+        version: link:../../packages/express-typed
+      morgan:
+        specifier: ^1.10.0
+        version: 1.10.0
+    devDependencies:
+      tsx:
+        specifier: ^4.7.2
+        version: 4.7.3
+
   examples/fullstack_react_express-typed/express-typed-demo:
     dependencies:
       '@types/express':
@@ -105,7 +133,7 @@ importers:
         specifier: ^5.2.0
         version: 5.2.9(@types/node@20.12.7)
 
-  examples/regular-express/backend:
+  examples/regular-express:
     dependencies:
       '@types/express':
         specifier: ^4.17.21
