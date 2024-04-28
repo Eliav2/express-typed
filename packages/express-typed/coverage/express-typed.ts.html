@@ -369,7 +369,7 @@
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >export type ParseRoutes&lt;T extends TypedRouter&lt;any&gt;&gt; = FlatNestedRouters&lt;T["routes"]&gt;;</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export type KeysWithMethod&lt;T, Method extends string&gt; = {</span>
+<span class="cstat-no" title="statement not covered" >export type GetRoutesWithMethodHelper&lt;T, Method extends string&gt; = {</span>
 <span class="cstat-no" title="statement not covered" >  [K in keyof T]: Method extends keyof T[K] ? K : never;</span>
 <span class="cstat-no" title="statement not covered" >}[keyof T];</span>
 &nbsp;</pre></td></tr></table></pre>
