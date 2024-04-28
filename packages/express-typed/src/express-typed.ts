@@ -57,6 +57,7 @@ export class TypedRouter<
   }
 }
 
+
 // extract any relevant information from TypedRouter, and flatten any nested routers
 export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
 
@@ -83,12 +84,12 @@ export type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) ex
  */
 export type GetRouteResponseInfoHelper<
   Router extends TypedRouter<any>["routes"],
-  Path extends keyof FlatNestedRouters<Router>,
-  Method extends keyof FlatNestedRouters<Router>[Path]
+  Path extends keyof Router,
+  Method extends keyof Router[Path]
 > = UnionToIntersection<
   (
     ReturnType<
-      FlatNestedRouters<Router>[Path][Method] extends (...args: any) => any ? FlatNestedRouters<Router>[Path][Method] : never
+      Router[Path][Method] extends (...args: any) => any ? Router[Path][Method] : never
     > extends TypedResponse<infer Res>
       ? Res
       : never
@@ -105,8 +106,8 @@ export type GetRouteResponseInfoHelper<
  */
 export type GetRouteResponseInfo<
   Router extends TypedRouter<any>["routes"],
-  Path extends keyof FlatNestedRouters<Router>,
-  Method extends keyof FlatNestedRouters<Router>[Path],
+  Path extends keyof Router,
+  Method extends keyof Router[Path],
   Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method> | "body" = "body"
   // Info extends "body" | undefined = undefined
 > = Info extends "body"
@@ -119,22 +120,22 @@ export type GetRouteResponseInfo<
  * Get all the keys in the router that have a specific method
  * for example, KeysWithMethod<typeof typedRouter, "get"> might return "/" | "/nested"
  */
-export type KeysWithMethod<Router extends TypedRouter<any>, Method extends GetRouterMethods<Router>> = {
-  [K in keyof ParseRoutes<Router>]: Method extends keyof ParseRoutes<Router>[K] ? K : never;
-}[keyof ParseRoutes<Router>];
+export type KeysWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
+  [K in keyof Router]: Method extends keyof Router[K] ? K : never;
+}[keyof Router];
 
 /**
  * Get all the existing methods for any endpoint in the router
  * for example, GetRouterMethods<typeof typedRouter> might return "get" | "post" | "all" or something similar, if those are the methods are defined on some of the endpoints in the router
  */
-export type GetRouterMethods<Router extends TypedRouter<any>> = keyof UnionToIntersection<ParseRoutes<Router>[keyof ParseRoutes<Router>]>;
+export type GetRouterMethods<Router extends TypedRouter<any>['routes']> = keyof UnionToIntersection<Router[keyof Router]>;
 
 /**
  * Get all the routes in the router that have a specific method
  * for example, GetRoutesWithMethod<typeof typedRouter, "get"> might return { "/": "Hello world", "/nested": "get /nested/" }
  */
-export type GetRoutesWithMethod<Router extends TypedRouter<any>, Method extends GetRouterMethods<Router>> = {
-  [Path in KeysWithMethod<Router, Method>]: Method extends keyof ParseRoutes<Router>[Path]
-    ? GetRouteResponseInfo<ParseRoutes<Router>, Path, Method>
+export type GetRoutesWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
+  [Path in KeysWithMethod<Router, Method>]: Method extends keyof Router[Path]
+    ? GetRouteResponseInfo<Router, Path, Method>
     : never;
 };
