@@ -100,18 +100,26 @@ export type AppRoutes = ParseRoutes<typeof typedRouter>;
 
 `AppRoutes` would be now used with all the helper types from `express-typed` to extract the information you need from the routes. never pass `typeof typedRouter` directly to the helper types, always use `AppRoutes`.
 
+if this lib does not provide the type you need, you can always extract it from `AppRoutes` entirely yourself, or by utilizing helper types from `express-typed`.
+
 **NOTICE: the next types should be defined on your side, using the helper types from `express-typed`.**
 
-unfortunately, typescript does not support higher-order generic type aliases, so some relatively verbose types is needed to be defined on the user's side. you would define them using helper types from `express-typed`.
+unfortunately, typescript does not support higher-order generic type aliases, so some of the next types are going to be quite verbose, but they are still very useful, and defined using the helper types from `express-typed`.
 
-### RouteResolver
+<details>
 
-`RouteResolver` is used to extract the response type from a specific route.
+<summary>
+
+### RouteResResolver
+
+</summary>
+
+`RouteResResolver` is used to extract the response type from a specific route.
 
 ```ts
 import { GetRouteResponseInfo, GetRouteResponseInfoHelper } from "express-typed";
-//// RouteResolver
-export type RouteResolver<
+//// RouteResResolver
+export type RouteResResolver<
   Path extends keyof AppRoutes,
   Method extends keyof AppRoutes[Path],
   Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body"
@@ -123,42 +131,42 @@ usage:
 ```ts
 // get the response from the home page
 // the info passed to res.send, res.json, or res.jsonp
-type HomePageResponse = RouteResolver<"/", "get">;
+type HomePageResponse = RouteResResolver<"/", "get">;
 //   ^? "Hello World!"
 ```
 
-by default, `RouteResolver` would return the information passed to the `res.send`, to the `res.json` or to the `res.jsonp` functions in the route handler, but you can also extract other information like the status code, headers, etc.
+by default, `RouteResResolver` would return the information passed to the `res.send`, to the `res.json` or to the `res.jsonp` functions in the route handler, but you can also extract other information like the status code, headers, etc.
 
 ```ts
 // get specific info from the response (here, the status code)
-type HomePageStatus = RouteResolver<"/", "get", "status">;
+type HomePageStatus = RouteResResolver<"/", "get", "status">;
 //   ^? 200
 ```
 
-then you can use these types on your frontend codebase to ensure type safety. for example using `axios` and `react-query`:
+then you can use these types on your frontend codebase to ensure type safety. for example using `axios` and `react-query`(from [here](/examples/fullstack_react_express-typed/frontend-demo/src/queries.ts)):
 
 ```ts
 // queries.ts
 import { useQuery } from "@tanstack/react-query";
 import axios, { type AxiosStatic } from "axios";
-import type { AppRoutes, RouteResolver } from "your-backend-package/src/routes/index.routes";
+import type { AppRoutes, RouteResResolver } from "your-backend-package/src/routes/index.routes";
 
 // an hook to fetch response from server, for any possible method(GET, POST, PUT, DELETE)
 export const useAppQuery = <Path extends keyof AppRoutes, Method extends Extract<keyof AxiosStatic, keyof AppRoutes[Path]>>(
   path: Path,
   method: Method
 ) => {
-  return useQuery<RouteResolver<Path, Method>>({
+  return useQuery<RouteResResolver<Path, Method>>({
     queryKey: [path],
     queryFn: async () => {
       const res = await (axios as any)[method](`/api${path}`);
-      return res.data as RouteResolver<Path, Method>;
+      return res.data as RouteResResolver<Path, Method>;
     },
   });
 };
 ```
 
-and usage:
+and usage(see [here](/examples/fullstack_react_express-typed/frontend-demo/src/App.tsx):
 
 ```tsx
 import { useAppQuery } from "./queries";
@@ -176,7 +184,75 @@ function App() {
 export default App;
 ```
 
+</details>
+
+<details>
+
+<summary>
+
+### RouteReqResolver
+
+</summary>
+
+`RouteReqResolver` is defined on your side with the help of `GetRouteRequestHelper` and `GetRouteRequest`:
+
+```ts
+import { GetRouteRequestHelper, GetRouteRequest, TypedRouter } from "express-typed";
+
+export type RouteReqResolver<
+  Path extends keyof AppRoutes,
+  Method extends keyof AppRoutes[Path],
+  Info extends keyof GetRouteRequestHelper<AppRoutes, Path, Method> = Extract<keyof GetRouteRequestHelper<AppRoutes, Path, Method>, "body">
+> = GetRouteRequest<AppRoutes, Path, Method, Info>;
+
+const typedRouter = new TypedRouter({
+  "/": {
+    get: (req: TypedRequest<{ body: "bb"; query: "qq" }>, res) => {
+      const body = req.body;
+      const test = res.send("Home").status(200);
+      return test;
+    },
+  },
+});
+
+type HomePageBody = RouteReqResolver<"/", "get">;
+//   ^? "bb"
+type HomePageQuery = RouteReqResolver<"/", "get", "query">;
+//   ^? "qq"
+```
+
+example of using this info with react-query mutation(see [here](/examples/fullstack_react_express-typed/frontend-demo/src/mutations.ts)):
+
+```ts
+import { DefaultError, useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { AppRoutes, RouteReqResolver, RouteResResolver } from "express-typed-demo/src/routes/index.routes";
+
+const useAppMutation = <Path extends keyof AppRoutes, Method extends keyof AppRoutes[Path]>(path: Path, method: Method) => {
+  const mutation = useMutation<RouteResResolver<Path, Method>, DefaultError, RouteReqResolver<Path, Method>>({
+    mutationKey: ["mutation", path, method],
+    mutationFn: async () => {
+      const res = await (axios as any)[method](`/api${path}`);
+      return res.data as RouteResResolver<Path, Method>;
+    },
+  });
+  return mutation;
+};
+
+// completly type safe
+const testMutation = useAppMutation("/mutate", "post");
+testMutation.mutate({ name: "test" });
+```
+
+</details>
+
+<details>
+
+<summary>
+
 ### RoutesWithMethod
+
+</summary>
 
 `RoutesWithMethod` is used to extract all the routes with a specific method from the routes object.
 
@@ -186,7 +262,7 @@ import { GetRoutesWithMethod, GetRouterMethods } from "express-typed";
 export type RoutesWithMethod<Method extends GetRouterMethods<AppRoutes>> = GetRoutesWithMethod<AppRoutes, Method>;
 ```
 
-usage:
+usage(see [here](/examples/fullstack_react_express-typed/frontend-demo/src/queries.ts)):
 
 ```ts
 // get all routes that have a "get" method, and their response types
@@ -230,13 +306,7 @@ export const useAppPostQuery = <P extends keyof PostRoutes>(path: P) => {
 };
 ```
 
-### AppRoutes
-
-always remember, `AppRoutes` is the type that contains all the routes in your application, and you can use it to extract any information you need from the routes.
-
-if this lib does not provide the type you need, you can always define it entirely yourself, or by utilizing helper types from `express-typed`.
-
-if you have any suggestions for new helper types, feel free to open an issue or submit a pull request on GitHub.
+</details>
 
 ## Contributing
 
@@ -253,6 +323,6 @@ The technique that was used in this lib could be used to create similar typesafe
 - [x] basic router support
 - [x] nested routers support
 - [x] backend return type inference(the type that the backend returns)
-- [ ] backend request type inference(the type that the backend expects in the request)
+- [x] backend request type inference(the type that the backend expects in the request)
 - [ ] type-safe path parameters
 - [ ] type-safe query parameters

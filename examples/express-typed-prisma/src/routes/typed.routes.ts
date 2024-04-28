@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import {
+  GetRouteRequest,
+  GetRouteRequestHelper,
   GetRouteResponseInfo,
   GetRouteResponseInfoHelper,
   GetRouterMethods,
@@ -40,13 +42,19 @@ export default typedRouter;
 
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
 
-export type RouteResolver<
+export type RouteResResolver<
   Path extends keyof AppRoutes,
   Method extends keyof AppRoutes[Path],
-  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body"
+  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body",
 > = GetRouteResponseInfo<AppRoutes, Path, Method, Info>;
 
 export type RoutesWithMethod<Method extends GetRouterMethods<AppRoutes>> = GetRoutesWithMethod<AppRoutes, Method>;
 
-type HomeRouteResponse = RouteResolver<"/", "get">;
-type UserRouteResponse = RouteResolver<"/prisma/user", "get">;
+type HomeRouteResponse = RouteResResolver<"/", "get">;
+type UserRouteResponse = RouteResResolver<"/prisma/user", "get">;
+
+export type RouteReqResolver<
+  Path extends keyof AppRoutes,
+  Method extends keyof AppRoutes[Path],
+  Info extends keyof GetRouteRequestHelper<AppRoutes, Path, Method> = Extract<keyof GetRouteRequestHelper<AppRoutes, Path, Method>, "body">
+> = GetRouteRequest<AppRoutes, Path, Method, Info>;

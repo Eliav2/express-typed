@@ -18,20 +18,20 @@ const typedRouter = new TypedRouter({
 
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
 
-//// RouteResolver
-export type RouteResolver<
+//// RouteResResolver
+export type RouteResResolver<
   Path extends keyof AppRoutes,
   Method extends keyof AppRoutes[Path],
-  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body"
+  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body",
 > = GetRouteResponseInfo<AppRoutes, Path, Method, Info>;
 
-test("RouteResolver test async route", () => {
-  type HomeRouteResponse = RouteResolver<"/", "get">;
+test("RouteResResolver test async route", () => {
+  type HomeRouteResponse = RouteResResolver<"/", "get">;
   expectTypeOf<HomeRouteResponse>().toEqualTypeOf<"Home">();
   type HomeRouteResponseInfo = GetRouteResponseInfoHelper<AppRoutes, "/", "get">;
   expectTypeOf<HomeRouteResponseInfo>().toEqualTypeOf<{ send: "Home" } & { status: 200 }>();
 
-  type AsyncRouteResponse = RouteResolver<"/async", "get">;
+  type AsyncRouteResponse = RouteResResolver<"/async", "get">;
   type AsyncRouteResponseInfo = GetRouteResponseInfoHelper<AppRoutes, "/async", "get">;
   expectTypeOf<AsyncRouteResponse>().toEqualTypeOf<"async Route!">();
   expectTypeOf<AsyncRouteResponseInfo>().toEqualTypeOf<{ send: "async Route!" } & { status: 200 }>();
