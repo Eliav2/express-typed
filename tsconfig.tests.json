@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "strict": true,
     // "declaration": true
+    "noErrorTruncation": true,
   },
   // "include": ["**/*.test(-d)?.ts"],
   "include": ["**/*.ts"],
