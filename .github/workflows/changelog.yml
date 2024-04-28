@@ -2,7 +2,6 @@ name: Generate changelog
 on:
   release:
     types: [created, edited]
-
 jobs:
   generate-changelog:
     runs-on: ubuntu-latest
