@@ -57,7 +57,6 @@ export class TypedRouter<
   }
 }
 
-
 // extract any relevant information from TypedRouter, and flatten any nested routers
 export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
 
@@ -88,9 +87,9 @@ export type GetRouteResponseInfoHelper<
   Method extends keyof Router[Path]
 > = UnionToIntersection<
   (
-    ReturnType<
-      Router[Path][Method] extends (...args: any) => any ? Router[Path][Method] : never
-    > extends TypedResponse<infer Res>
+    ReturnType<Router[Path][Method] extends (...args: any) => any ? Router[Path][Method] : never> extends
+      | TypedResponse<infer Res>
+      | Promise<TypedResponse<infer Res>>
       ? Res
       : never
   ) extends (infer U)[]
@@ -120,7 +119,7 @@ export type GetRouteResponseInfo<
  * Get all the keys in the router that have a specific method
  * for example, KeysWithMethod<typeof typedRouter, "get"> might return "/" | "/nested"
  */
-export type KeysWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
+export type KeysWithMethod<Router extends TypedRouter<any>["routes"], Method extends GetRouterMethods<Router>> = {
   [K in keyof Router]: Method extends keyof Router[K] ? K : never;
 }[keyof Router];
 
@@ -128,14 +127,12 @@ export type KeysWithMethod<Router extends TypedRouter<any>['routes'], Method ext
  * Get all the existing methods for any endpoint in the router
  * for example, GetRouterMethods<typeof typedRouter> might return "get" | "post" | "all" or something similar, if those are the methods are defined on some of the endpoints in the router
  */
-export type GetRouterMethods<Router extends TypedRouter<any>['routes']> = keyof UnionToIntersection<Router[keyof Router]>;
+export type GetRouterMethods<Router extends TypedRouter<any>["routes"]> = keyof UnionToIntersection<Router[keyof Router]>;
 
 /**
  * Get all the routes in the router that have a specific method
  * for example, GetRoutesWithMethod<typeof typedRouter, "get"> might return { "/": "Hello world", "/nested": "get /nested/" }
  */
-export type GetRoutesWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
-  [Path in KeysWithMethod<Router, Method>]: Method extends keyof Router[Path]
-    ? GetRouteResponseInfo<Router, Path, Method>
-    : never;
+export type GetRoutesWithMethod<Router extends TypedRouter<any>["routes"], Method extends GetRouterMethods<Router>> = {
+  [Path in KeysWithMethod<Router, Method>]: Method extends keyof Router[Path] ? GetRouteResponseInfo<Router, Path, Method> : never;
 };
