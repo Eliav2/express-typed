@@ -15,7 +15,9 @@ By the way, this library is just a tiny wrapper written in a single file, so you
 
 ## Installation
 
-You can install express-typed via npm:
+Install express-typed on your backend.
+
+You can install express-typed by:
 
 ```bash
 pnpm add express-typed
@@ -29,7 +31,7 @@ yarn add express-typed
 npm install express-typed
 ```
 
-## Usage
+## Hello World Example
 
 express-typed is focused on your express routers because that's where you define your API routes, and that's what's important for end-to-end type safety.
 
@@ -84,19 +86,23 @@ app.listen(3000, () => {
 
 This demo opens a full-stack react+express project in StackBlitz, demonstrating end-to-end type safety with express-typed on the left pane and a simple react app on the right pane. play with the types on the backend and watch them reflect on the frontend immediately.
 
-## how to use the inferred types
+## Usage
 
-once your router is defined, you can use the `ParseRoutes` type to extract the types of your routes and use them in your frontend codebase.
+### ParseRoutes
+
+Once your TypedRouter is defined, You start by extracting the relevant types from your TypedRouter instance by using the `ParseRoutes` type.
 
 ```ts
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
 ```
 
-`AppRoutes` would be later used to extract any information you need from the routes, like the response type, the request type, etc.
+`ParseRoutes` is a helper type that extracts all routes information from the TypedRouter and flattens nested TypedRouters.
 
-unfortunately, typescript does not support higher-order generic type aliases, so some relatively verbose types are needed to be defined on the user's side. you would define them using helper types from `express-typed`.
+`AppRoutes` would be now used with all the helper types from `express-typed` to extract the information you need from the routes. never pass `typeof typedRouter` directly to the helper types, always use `AppRoutes`.
 
 **NOTICE: the next types should be defined on your side, using the helper types from `express-typed`.**
+
+unfortunately, typescript does not support higher-order generic type aliases, so some relatively verbose types is needed to be defined on the user's side. you would define them using helper types from `express-typed`.
 
 ### RouteResolver
 
@@ -175,11 +181,9 @@ export default App;
 `RoutesWithMethod` is used to extract all the routes with a specific method from the routes object.
 
 ```ts
-import { KeysWithMethod, GetRouteResponseInfo } from "express-typed";
+import { GetRoutesWithMethod, GetRouterMethods } from "express-typed";
 //// RoutesWithMethod
-export type RoutesWithMethod<Method extends HandlerMethods> = {
-  [key in KeysWithMethod<AppRoutes, Method>]: Method extends keyof AppRoutes[key] ? GetRouteResponseInfo<AppRoutes, key, Method> : never;
-};
+export type RoutesWithMethod<Method extends GetRouterMethods<AppRoutes>> = GetRoutesWithMethod<AppRoutes, Method>;
 ```
 
 usage:
@@ -240,7 +244,9 @@ This library is still in its early stages, and that's exactly the time to sugges
 
 Contributions are welcome! If you find any issues or have suggestions for improvements, feel free to open an issue or submit a pull request on GitHub.
 
-The technique that was used in this lib creates similar typesafe adapters for other backend frameworks like Fastify, Koa, etc.
+The technique that was used in this lib could be used to create similar typesafe adapters for other backend frameworks like Fastify, Koa, etc.
+
+**Pull requests to the dev branch only, please.**
 
 ## roadmap
 
@@ -248,3 +254,5 @@ The technique that was used in this lib creates similar typesafe adapters for ot
 - [x] nested routers support
 - [x] backend return type inference(the type that the backend returns)
 - [ ] backend request type inference(the type that the backend expects in the request)
+- [ ] type-safe path parameters
+- [ ] type-safe query parameters

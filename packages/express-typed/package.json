@@ -1,6 +1,6 @@
 {
   "name": "express-typed",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "",
   "type": "module",
   "main": "dist/express-typed.js",
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "prepublish": "pnpm build",
+    "prepublishOnly": "pnpm build",
     "test": "vitest"
   },
   "keywords": [],
