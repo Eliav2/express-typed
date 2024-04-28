@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client";
-import express, { Request } from "express";
+import express, { Request, Response } from "express";
 
 const prisma = new PrismaClient();
 
 const router = express.Router();
 
-router.post("/", async (req:Request<any,any,{user:string}>, res) => {
+router.post("/", async (req, res) => {
   const userWhoesPosts = req.body.user;
   const user = await prisma.user.findUnique({
     where: {
