@@ -150,7 +150,7 @@ export type GetRouteRequest<
  * Get all the paths in the router that have a specific method,
  * for example, GetRoutesWithMethodHelper<typeof typedRouter, "get"> might return "/" | "/nested"
  */
-export type GetRoutesWithMethodHelper<Router extends TypedRouter<any>["routes"], Method extends GetRouterMethods<Router>> = {
+export type KeysWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
   [K in keyof Router]: Method extends keyof Router[K] ? K : never;
 }[keyof Router];
 
@@ -164,8 +164,8 @@ export type GetRouterMethods<Router extends TypedRouter<any>["routes"]> = keyof 
  * Get all the routes in the router that have a specific method,
  * for example, GetRoutesWithMethod<typeof typedRouter, "get"> might return { "/": "Hello world", "/nested": "get /nested/" }
  */
-export type GetRoutesWithMethod<Router extends TypedRouter<any>["routes"], Method extends GetRouterMethods<Router>> = {
-  [Path in GetRoutesWithMethodHelper<Router, Method>]: Method extends keyof Router[Path]
+export type GetRoutesWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
+  [Path in KeysWithMethod<Router, Method>]: Method extends keyof Router[Path]
     ? GetRouteResponseInfo<Router, Path, Method>
     : never;
 };
