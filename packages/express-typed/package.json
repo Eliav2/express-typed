@@ -1,6 +1,6 @@
 {
   "name": "express-typed",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "",
   "type": "module",
   "main": "dist/express-typed.js",
@@ -28,6 +28,9 @@
     "express": "*"
   },
   "files": [
-    "dist"
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
   ]
 }
