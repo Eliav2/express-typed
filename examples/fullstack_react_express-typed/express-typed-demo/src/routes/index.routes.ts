@@ -1,4 +1,14 @@
-import { GetRouteResponseInfo, GetRouteResponseInfoHelper, GetRouterMethods, GetRoutesWithMethod, ParseRoutes, TypedRouter } from "express-typed";
+import {
+  GetRouteRequest,
+  GetRouteRequestHelper,
+  GetRouteResponseInfo,
+  GetRouteResponseInfoHelper,
+  GetRouterMethods,
+  GetRoutesWithMethod,
+  ParseRoutes,
+  TypedRequest,
+  TypedRouter,
+} from "express-typed";
 
 import nestedRouter from "./nested.routes";
 
@@ -10,8 +20,8 @@ const typedRouter = new TypedRouter({
     },
   },
   "/mutate": {
-    post: (req, res) => {
-      return res.send("Mutated!").status(201);
+    post: (req: TypedRequest<{ body: { name: string } }>, res) => {
+      return res.send(req.body).status(201);
     },
   },
   "/json": {
@@ -36,8 +46,8 @@ export default typedRouter;
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
 //          ^?
 
-//// RouteResolver
-export type RouteResolver<
+//// RouteResResolver
+export type RouteResResolver<
   Path extends keyof AppRoutes,
   Method extends keyof AppRoutes[Path],
   Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body"
@@ -45,10 +55,10 @@ export type RouteResolver<
 
 // example usage
 // get the response from the home page
-type HomePageResponse = RouteResolver<"/", "get">;
+type HomePageResponse = RouteResResolver<"/", "get">;
 //   ^?
 // get specific info from the response (here, the status code)
-type HomePageStatus = RouteResolver<"/", "get", "status">;
+type HomePageStatus = RouteResResolver<"/", "get", "status">;
 //   ^?
 ////
 
@@ -58,8 +68,18 @@ export type RoutesWithMethod<Method extends GetRouterMethods<AppRoutes>> = GetRo
 // usage
 // get all routes that have a "get" method, and their response types
 type GetRoutes = RoutesWithMethod<"get">;
-//   ^? type GetRoutes = { "/": "Hello world"}; 
+//   ^? type GetRoutes = { "/": "Hello world"};
 // get all routes that have a "post" method, and their response types
 type PostRoutes = RoutesWithMethod<"post">;
 //   ^?
 ////
+
+export type RouteReqResolver<
+  Path extends keyof AppRoutes,
+  Method extends keyof AppRoutes[Path],
+  Info extends keyof GetRouteRequestHelper<AppRoutes, Path, Method> = Extract<keyof GetRouteRequestHelper<AppRoutes, Path, Method>, "body">
+> = GetRouteRequest<AppRoutes, Path, Method, Info>;
+
+// usage
+// get the request type for the "/mutate" route
+type MutateRouteRequest = RouteReqResolver<"/mutate", "post">

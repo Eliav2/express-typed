@@ -18,7 +18,11 @@ export type TypedResponse<Res extends any[] = []> = {
 // The different methods that can be used to send a response, those have special meaning
 export type SendMethod = "send" | "json" | "jsonp";
 
-export type TypedRequest<Req extends any[] = []> = {} & Request;
+export type TypedRequest<ReqInfo extends { body?: any; query?: any } = { body: any; query: any }> = {
+  body?: ReqInfo["body"];
+  query?: ReqInfo["query"];
+};
+// & Omit<Request, "body">;
 
 // The different methods that can be used to handle a request
 export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
@@ -115,24 +119,53 @@ export type GetRouteResponseInfo<
   ? GetRouteResponseInfoHelper<Router, Path, Method>[Info]
   : GetRouteResponseInfoHelper<Router, Path, Method>;
 
+type FilterUnknown<T> = {
+  [K in keyof T as unknown extends T[K] ? never : K]: T[K];
+};
+
 /**
- * Get all the keys in the router that have a specific method
- * for example, KeysWithMethod<typeof typedRouter, "get"> might return "/" | "/nested"
+ * Get the actual request type for a given route
+ * for example
+ * - GetRouteRequest<typeof typedRouter, "/", "get"> might return { body: { name: string } }
  */
-export type KeysWithMethod<Router extends TypedRouter<any>["routes"], Method extends GetRouterMethods<Router>> = {
+export type GetRouteRequestHelper<
+  Router extends TypedRouter<any>["routes"],
+  Path extends keyof Router,
+  Method extends keyof Router[Path]
+> = Router[Path][Method] extends (req: infer Req, res: any) => any ? FilterUnknown<Req> : never;
+
+/**
+ * Get the  certain info from request type for a given route, default is "body"
+ * for example
+ * - GetRouteRequest<typeof typedRouter, "/", "get"> might return { name: string }
+ */
+export type GetRouteRequest<
+  Router extends TypedRouter<any>["routes"],
+  Path extends keyof Router,
+  Method extends keyof Router[Path],
+  Info extends keyof GetRouteRequestHelper<Router, Path, Method> = Extract<keyof GetRouteRequestHelper<Router, Path, Method>, "body">
+> = GetRouteRequestHelper<Router, Path, Method> extends { [K in Info]?: infer T } ? T : never;
+
+/**
+ * Get all the paths in the router that have a specific method,
+ * for example, GetRoutesWithMethodHelper<typeof typedRouter, "get"> might return "/" | "/nested"
+ */
+export type KeysWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
   [K in keyof Router]: Method extends keyof Router[K] ? K : never;
 }[keyof Router];
 
 /**
- * Get all the existing methods for any endpoint in the router
+ * Get all the existing methods for any endpoint in the router,
  * for example, GetRouterMethods<typeof typedRouter> might return "get" | "post" | "all" or something similar, if those are the methods are defined on some of the endpoints in the router
  */
 export type GetRouterMethods<Router extends TypedRouter<any>["routes"]> = keyof UnionToIntersection<Router[keyof Router]>;
 
 /**
- * Get all the routes in the router that have a specific method
+ * Get all the routes in the router that have a specific method,
  * for example, GetRoutesWithMethod<typeof typedRouter, "get"> might return { "/": "Hello world", "/nested": "get /nested/" }
  */
-export type GetRoutesWithMethod<Router extends TypedRouter<any>["routes"], Method extends GetRouterMethods<Router>> = {
-  [Path in KeysWithMethod<Router, Method>]: Method extends keyof Router[Path] ? GetRouteResponseInfo<Router, Path, Method> : never;
+export type GetRoutesWithMethod<Router extends TypedRouter<any>['routes'], Method extends GetRouterMethods<Router>> = {
+  [Path in KeysWithMethod<Router, Method>]: Method extends keyof Router[Path]
+    ? GetRouteResponseInfo<Router, Path, Method>
+    : never;
 };

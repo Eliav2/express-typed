@@ -54,23 +54,23 @@ type TypedRoutes = ParseRoutes<typeof typedRouter>;
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
 //          ^?
 
-//// RouteResolver
-export type RouteResolver<
+//// RouteResResolver
+export type RouteResResolver<
   Path extends keyof AppRoutes,
   Method extends keyof AppRoutes[Path],
-  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body"
+  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body",
 > = GetRouteResponseInfo<AppRoutes, Path, Method, Info>;
 
 // example usage
 // get the response from the home page
-type HomePageResponse = RouteResolver<"/", "get">;
+type HomePageResponse = RouteResResolver<"/", "get">;
 //   ^?
 // get specific info from the response (here, the status code)
-type HomePageStatus = RouteResolver<"/", "get", "status">;
+type HomePageStatus = RouteResResolver<"/", "get", "status">;
 //   ^?
 ////
 
-// type testKeysWithMethod = KeysWithMethod<typeof typedRouter, "post">;
+// type testKeysWithMethod = GetRoutesWithMethodHelper<typeof typedRouter, "post">;
 
 test("RoutesWithMethod", () => {
   //// RoutesWithMethod
@@ -165,12 +165,12 @@ test("GetRouteResponseInfo", () => {
   };
 });
 
-// Test RouteResolver
-test("RouteResolver", () => {
-  const testRouteResolverDefault: RouteResolver<"/", "get"> = "Typesafe Route!";
-  const testRouteResolverStatus: RouteResolver<"/", "get", "status"> = 200;
-  const testRouteResolverJson: RouteResolver<"/test", "get", "json"> = { message: 123 };
-  const testRouteResolverSend: RouteResolver<"/test", "get", "send"> = "test";
+// Test RouteResResolver
+test("RouteResResolver", () => {
+  const testRouteResolverDefault: RouteResResolver<"/", "get"> = "Typesafe Route!";
+  const testRouteResolverStatus: RouteResResolver<"/", "get", "status"> = 200;
+  const testRouteResolverJson: RouteResResolver<"/test", "get", "json"> = { message: 123 };
+  const testRouteResolverSend: RouteResResolver<"/test", "get", "send"> = "test";
 });
 
 test("FlatNestedRouters", () => {
