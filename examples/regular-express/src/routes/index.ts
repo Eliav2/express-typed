@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import routeNested from "./nested";
+import routeNested from "./nested.js";
 
 const router = express.Router();
 

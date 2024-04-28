@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import logger from "morgan";
-import router from "./routes/index";
+import router from "./routes/index.js";
 
 // Create Express server
 export const app = express();

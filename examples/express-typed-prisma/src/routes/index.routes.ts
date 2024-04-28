@@ -1,4 +1,4 @@
-import { GetRouteResponseInfo, TypedRouter, ParseRoutes, GetRouteResponseInfoHelper, HandlerMethods, KeysWithMethod } from "express-typed";
+import { GetRouteResponseInfo, TypedRouter, ParseRoutes, GetRouteResponseInfoHelper, HandlerMethods, KeysWithMethod, GetRouterMethods, GetRoutesWithMethod } from "express-typed";
 
 const typedRouter = new TypedRouter({
   // example usage
@@ -20,8 +20,6 @@ export type RouteResolver<
 > = GetRouteResponseInfo<AppRoutes, Path, Method, Info>;
 
 
-export type RoutesWithMethod<Method extends HandlerMethods> = {
-  [key in KeysWithMethod<AppRoutes, Method>]: Method extends keyof AppRoutes[key] ? GetRouteResponseInfo<AppRoutes, key, Method> : never;
-};
+export type RoutesWithMethod<Method extends GetRouterMethods<AppRoutes>> = GetRoutesWithMethod<AppRoutes, Method>;
 
 
