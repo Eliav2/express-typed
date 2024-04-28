@@ -1,7 +1,7 @@
 {
   "name": "express-typed",
   "version": "0.2.0",
-  "description": "",
+  "description": "end-to-end typesafe TypeScript wrapper for Express.js",
   "type": "module",
   "main": "dist/express-typed.js",
   "module": "dist/express-typed.js",
