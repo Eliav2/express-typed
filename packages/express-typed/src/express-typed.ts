@@ -90,7 +90,7 @@ export type GetRouteResponseInfoHelper<
   (
     ReturnType<
       Router[Path][Method] extends (...args: any) => any ? Router[Path][Method] : never
-    > extends TypedResponse<infer Res>
+    > extends TypedResponse<infer Res> | Promise<TypedResponse<infer Res>>
       ? Res
       : never
   ) extends (infer U)[]
