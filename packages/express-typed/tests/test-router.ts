@@ -1,4 +1,4 @@
-import { TypedRequest, TypedResponse, TypedRouter, ParseRoutes } from "../src/express-typed";
+import { TypedRequest, TypedResponse, TypedRouter, ParseRoutes, GetRouteResponseInfo } from "../src/express-typed";
 
 const typedRouter = new TypedRouter({
   // returned type is inferred
@@ -54,3 +54,5 @@ const typedRouter = new TypedRouter({
 export default typedRouter;
 
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
+type ApiAdminResponse = GetRouteResponseInfo<AppRoutes, "/api/Admin", "get">;
+//   ^? type ApiAdminResponse = "get: /api/Admin"

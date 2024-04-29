@@ -459,6 +459,22 @@ const typedRouter = new TypedRouter({
 export default typedRouter;
 
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
+
+// the types below can be imported and used by your frontend code
+type HomeGetResponse = GetRouteResponseInfo<AppRoutes, "/", "get">;
+//   ^? "get: /"
+type HomePostResponse = GetRouteResponseInfo<AppRoutes, "/", "post">;
+//   ^? "post: /"
+type ExplicitReqGetResponse = GetRouteResponseInfo<AppRoutes, "/explicit-req", "get">;
+//   ^? { name: string }
+type ExplicitResGetResponse = GetRouteResponseInfo<AppRoutes, "/explicit-res", "get">;
+//   ^? { readonly name: "eliav" }
+type NestedGetResponse = GetRouteResponseInfo<AppRoutes, "/nested/", "get">;
+//   ^? "get /nested/"
+type NestedPostResponse = GetRouteResponseInfo<AppRoutes, "/nested/", "post">;
+//   ^? { userId: number; id: number; title: string; completed: boolean }
+type AllMethodsResponse = GetRouteResponseInfo<AppRoutes, "/nested/all", "all">;
+//   ^? "responding to all methods"
 ```
 
 and pretty much, that's it! you can now use the types defined in `AppRoutes` to ensure type safety in your frontend codebase.
