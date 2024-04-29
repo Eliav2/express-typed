@@ -1,7 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
-import { UnionToIntersection, WithDefault } from "./type-utils";
+// import type {Query} from "express-serve-static-core";
+import { DefaultIfUnknown, FilterUnknown, OnlyString, UnionToIntersection, WithDefault } from "./type-utils";
 
 // Patches the Response object with extra information, so that can later be extracted
+export type TypedResponseRes = { body: any; locals: Record<string, any>; routes: any };
 export type TypedResponse<Res extends Partial<TypedResponseRes> = TypedResponseRes, Info extends any[] = []> = {
   status<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { status: T }]>;
   links<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { links: T }]>;
@@ -16,16 +18,22 @@ export type TypedResponse<Res extends Partial<TypedResponseRes> = TypedResponseR
   send<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { send: T }]>;
 } & Response<Res["body"], WithDefault<Res["locals"], Record<string, any>>>;
 
-export type TypedResponseRes = { body: any; locals: Record<string, any>; routes: any };
-
 // The different methods that can be used to send a response, those have special meaning
 export type SendMethod = "send" | "json" | "jsonp";
 
-export type TypedRequest<ReqInfo extends { body?: any; query?: any } = { body: any; query: any }> = {
-  body: ReqInfo["body"];
-  query: ReqInfo["query"];
+// Patches the Request object with extra information, so that can later be extracted
+export type TypedRequestReq = {
+  body: any;
+  query: any; // todo: make it Record<string, any> (casing error `Types of property 'query' are incompatible` between TypedRequest["query"] and Request["query"])
+  params: Record<string, any>;
 };
-// & Omit<Request, "body">;
+export type TypedRequest<Req extends Partial<TypedRequestReq> = TypedRequestReq> = {
+  // body: unknown extends Req["body"]?any:Req["body"];
+  // body: WithDefault<Req["body"],any>;
+  body: DefaultIfUnknown<Req["body"], any>;
+  query: DefaultIfUnknown<Req["query"], any>;
+  params: DefaultIfUnknown<Req["params"], Record<string, any>>;
+} & Omit<Request<Record<string, string>, Req["body"], any, Req["query"], Record<string, any>>, "body">;
 
 // The different methods that can be used to handle a request
 export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
@@ -35,11 +43,17 @@ export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch"
  */
 export class TypedRouter<
   R extends {
-    [K in string]: R[K] extends TypedRouter<infer N>
+    // [Path in OnlyString<keyof FlatNestedRouters<R>>]: FlatNestedRouters<R>[Path]
+    [Path in string]: R[Path] extends TypedRouter<infer N>
       ? TypedRouter<N>
       :
           | {
-              [key in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+              [H in HandlerMethods]?: (
+                req: TypedRequest,
+                // req: TypedRequest<{ params: { [key in ExtractRouteParams<Path>]: string } }>,
+                res: TypedResponse,
+                next: NextFunction
+              ) => void;
             }
           | TypedRouter<any>;
   }
@@ -64,21 +78,30 @@ export class TypedRouter<
   }
 }
 
+// This alias is only to make sure a given T is valid flat TypedRouter (no nested routers)
+export type FlatTypedRouter = {
+  [Path in string]: {
+    [H in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+  };
+};
+
 // extract any relevant information from TypedRouter, and flatten any nested routers
 export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
 
 // flatten any nested routers
-export type FlatNestedRouters<T> = {
-  [K in keyof T]: K extends string
+export type FlatNestedRouters<R> = {
+  [K in keyof R]: K extends string
     ? (
-        x: T[K] extends TypedRouter<infer N>
-          ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
-          : Pick<T, K>
+        x: R[K] extends TypedRouter<infer N>
+          ? FlatNestedRouters<{ [K2 in OnlyString<keyof N> as `${K}${K2}`]: N[K2] }>
+          : // FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
+            Pick<R, K>
       ) => void
     : never;
 } extends { [k: string]: (x: infer I) => void }
-  ? { [K in keyof I]: I[K] }
-  : never;
+? { [K in keyof I]: I[K] }
+: never;
+
 
 /**
  * Get the response info for a given route and method
@@ -118,10 +141,6 @@ export type GetRouteResponseInfo<
   : Info extends keyof GetRouteResponseInfoHelper<Router, Path, Method>
   ? GetRouteResponseInfoHelper<Router, Path, Method>[Info]
   : GetRouteResponseInfoHelper<Router, Path, Method>;
-
-type FilterUnknown<T> = {
-  [K in keyof T as unknown extends T[K] ? never : K]: T[K];
-};
 
 /**
  * Get the actual request type for a given route
@@ -167,3 +186,25 @@ export type GetRouterMethods<Router extends TypedRouter<any>["routes"]> = keyof 
 export type GetRoutesWithMethod<Router extends TypedRouter<any>["routes"], Method extends GetRouterMethods<Router>> = {
   [Path in KeysWithMethod<Router, Method>]: Method extends keyof Router[Path] ? GetRouteResponseInfo<Router, Path, Method> : never;
 };
+
+/**
+ * Get the response info for a given route and method
+ * for example
+ *  ExtractRouteParams<"/123/:title/:id"> returns "title" | "id"
+ */
+export type ExtractRouteParams<Path extends string> = Path extends `${infer Start}/:${infer Param}/${infer Rest}`
+  ? Param | ExtractRouteParams<`/${Rest}`>
+  : Path extends `${infer Start}/:${infer Param}`
+  ? Param
+  : never;
+
+/**
+ * Interpolates route parameters into a string
+ * for example
+ *  - InterpolateRouteParamsIntoStrings<"/123/:title/:id"> returns `/123/${string}/${string}`
+ */
+export type InterpolateRouteParamsIntoStrings<S extends string> = S extends `${infer Start}:${infer Param}/${infer Rest}`
+  ? `${Start}${string}/${InterpolateRouteParamsIntoStrings<Rest>}`
+  : S extends `${infer Start}:${infer Param}`
+  ? `${Start}${string}`
+  : S;

@@ -54,5 +54,3 @@ const typedRouter = new TypedRouter({
 export default typedRouter;
 
 export type AppRoutes = ParseRoutes<typeof typedRouter>;
-type ApiAdminResponse = GetRouteResponseInfo<AppRoutes, "/api/Admin", "get">;
-//   ^? type ApiAdminResponse = "get: /api/Admin"

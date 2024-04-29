@@ -13,4 +13,15 @@ router.post("/", async (req, res) => {
 
 router.use("/nested", routeNested);
 
+// router.get("/posts/:title", async (req, res) => {
+//   res.send(`Post: ${req.params.title}`).status(200);
+// });
+router.get("/posts/:title/123", async (req, res) => {
+  res.send(`123 Post: ${req.params.title}`).status(200);
+});
+
+router.get("/posts/:title/555", async (req, res) => {
+  res.send(`555 Post: ${req.params.title}`).status(200);
+});
+
 export default router;
