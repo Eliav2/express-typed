@@ -3,21 +3,20 @@ import { UnionToIntersection, WithDefault } from "./type-utils";
 
 // Patches the Response object with extra information, so that can later be extracted
 export type TypedResponse<Res extends Partial<TypedResponseRes> = TypedResponseRes, Info extends any[] = []> = {
-  status<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { status: T }]>;
-  links<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { links: T }]>;
-  sendStatus<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { sendStatus: T }]>;
-  contentType<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { contentType: T }]>;
-  type<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { type: T }]>;
-  format<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { format: T }]>;
-  attachment<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { attachment: T }]>;
+  status<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { status: T }]>;
+  links<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { links: T }]>;
+  sendStatus<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { sendStatus: T }]>;
+  contentType<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { contentType: T }]>;
+  type<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { type: T }]>;
+  format<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { format: T }]>;
+  attachment<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { attachment: T }]>;
 
-  json<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { json: T }]>;
-  jsonp<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { jsonp: T }]>;
-  send<const T extends Res['body']>(arg: T): TypedResponse<Res, [...Info, { send: T }]>;
-  // } & Response<Res["ResBody"], Res["Locals"] extends Record<string, any> ? Res["Locals"] : Record<string, any>>;
+  json<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { json: T }]>;
+  jsonp<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { jsonp: T }]>;
+  send<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { send: T }]>;
 } & Response<Res["body"], WithDefault<Res["locals"], Record<string, any>>>;
 
-export type TypedResponseRes = { body: any; locals: Record<string, any> };
+export type TypedResponseRes = { body: any; locals: Record<string, any>; routes: any };
 
 // The different methods that can be used to send a response, those have special meaning
 export type SendMethod = "send" | "json" | "jsonp";

@@ -25,4 +25,7 @@ test("res explicit type assertion", () => {
     Method extends keyof AppRoutes[Path],
     Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body"
   > = GetRouteResponseInfo<AppRoutes, Path, Method, Info>;
+  type RegisterGetResponseInfo = GetRouteResponseInfoHelper<AppRoutes, "/register", "get">;
+  type RegisterGetResponse = GetRouteResponseInfo<AppRoutes, "/register", "get">;
+  type RegisterGetResponseResolver = RouteResResolver<"/register", "get">;
 });
