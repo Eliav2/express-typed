@@ -40,7 +40,7 @@ describe("FlatNestedRouters", () => {
     });
 
     type flat = FlatNestedRouters<(typeof typedRouter)["routes"]>;
-    type flatt1 = flat['/nested/']
+    type flatt1 = flat['/nested/nested2']
     type InferFunc<T> = T extends (x: infer I) => void ? I : never;
     type TT<T> = T extends { [k: string]: (x: infer I) => void }
       ? { [K in keyof I]: I[K] extends (x: infer I2) => void ? (K extends keyof I2 ? I2[K] : never) : I[K] }

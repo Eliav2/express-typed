@@ -49,8 +49,7 @@ export class TypedRouter<
       :
           | {
               [H in HandlerMethods]?: (
-                req: TypedRequest,
-                // req: TypedRequest<{ params: { [key in ExtractRouteParams<Path>]: string } }>,
+                req: TypedRequest, // todo: add contraint to TypedRequest about params, TypedRequest<{ params: { [key in ExtractRouteParams<Path>]: string } }> (currently it's imposible because it requires `Path keyof R` instead of `Path in string`, and that's would break nested routers in the current way that R type is enforced)
                 res: TypedResponse,
                 next: NextFunction
               ) => void;
@@ -99,9 +98,13 @@ export type FlatNestedRouters<R> = {
       ) => void
     : never;
 } extends { [k: string]: (x: infer I) => void }
-? { [K in keyof I]: I[K] }
-: never;
+  ? { [K in keyof I]: I[K] }
+  : never;
 
+// export type FlatNestedRoutersNew<R> = {
+//    [K in keyof R]: K extends string
+
+// }
 
 /**
  * Get the response info for a given route and method
