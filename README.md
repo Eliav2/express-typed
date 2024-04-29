@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/express-typed.svg)](https://www.npmjs.com/package/express-typed)
 
 express-typed is an end-to-end typesafe TypeScript wrapper for Express.js, designed to streamline the development
-process by providing strong typing support throughout your Express application.
+process by providing strong typing support throughout your Express-frontend codebase.
 
 express-typed **infers types from your backend codebase**, unlike libraries such as [ts-rest](https://ts-rest.com/)
 and [zodios](https://www.zodios.org/), which often require separate type definitions. This approach offers a developer
