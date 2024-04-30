@@ -68,14 +68,12 @@ app.use(router);
 //// -->
 //// BECOMES THIS:
 const typedRouter = new TypedRouter({
-  get: {
-    "/": async (req, res) => {
-      res.send("Hello World!").status(200);
+  "/": {
+    get: (req, res) => {
+      return res.send("Hello World!").status(200);
     },
-  },
-  post: {
-    "/": async (req, res) => {
-      res.send(req.body).status(200);
+    post: (req, res) => {
+      return res.send(req.body).status(200);
     },
   },
 });
