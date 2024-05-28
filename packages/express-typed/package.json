@@ -2,6 +2,12 @@
   "name": "express-typed",
   "version": "0.3.0",
   "description": "end-to-end typesafe TypeScript wrapper for Express.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Eliav2/express-typed"
+  },
+  "homepage": "https://github.com/Eliav2/express-typed",
+  "bugs":"https://github.com/Eliav2/express-typed/issues",
   "type": "module",
   "main": "dist/express-typed.js",
   "module": "dist/express-typed.js",
@@ -15,7 +21,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/express-serve-static-core": "^4.19.0",
