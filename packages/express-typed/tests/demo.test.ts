@@ -1,8 +1,10 @@
-import { expect, test } from "vitest";
+import { expect, test, describe } from "vitest";
 import { TypedRequest, TypedResponse, TypedRouter } from "../src/express-typed";
+import request from "supertest";
+import express from "express";
 
 // Test TypedRouter
-test("TypedRouter", () => {
+describe("TypedRouter", () => {
   const typedRouter = new TypedRouter({
     // returned type is inferred
     "/": {
@@ -53,5 +55,54 @@ test("TypedRouter", () => {
       },
     }),
   });
-  expect(typedRouter).toBeDefined();
+  test("TypedRouter correctly defined", () => {
+    expect(typedRouter).toBeDefined();
+  });
+  test("TypedRouter serves correctly express routes", async () => {
+    const app = express();
+    app.use(typedRouter.router);
+    await request(app)
+      .get("/")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("get: /");
+      });
+
+    await request(app)
+      .post("/")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("post: /");
+      });
+  });
+
+  test("TypedRouter serves correctly express nested routes", async () => {
+    const app = express();
+    app.use(typedRouter.router);
+    await request(app)
+      .get("/nested")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("get /nested/");
+      });
+
+    await request(app)
+      .post("/nested")
+      .expect(200)
+      .then((res) => {
+        expect(res.body).toEqual({
+          userId: 1,
+          id: 1,
+          title: "delectus aut autem",
+          completed: false,
+        });
+      });
+
+    await request(app)
+      .options("/nested/all")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("responding to all methods");
+      });
+  });
 });

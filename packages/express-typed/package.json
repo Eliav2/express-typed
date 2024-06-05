@@ -7,7 +7,7 @@
     "url": "https://github.com/Eliav2/express-typed"
   },
   "homepage": "https://github.com/Eliav2/express-typed",
-  "bugs":"https://github.com/Eliav2/express-typed/issues",
+  "bugs": "https://github.com/Eliav2/express-typed/issues",
   "type": "module",
   "main": "dist/express-typed.js",
   "module": "dist/express-typed.js",
@@ -28,6 +28,7 @@
     "@types/qs": "^6.9.15",
     "@vitest/coverage-v8": "^1.5.2",
     "express": "^4.19.2",
+    "supertest": "^7.0.0",
     "typescript": "^5.4.2"
   },
   "peerDependencies": {
