@@ -1,8 +1,10 @@
-import { expectTypeOf, test } from "vitest";
-import { GetRouteResponseInfo, ParseRoutes, TypedRequest, TypedResponse, TypedRouter } from "../src/express-typed";
+import { expect, test, describe } from "vitest";
+import { TypedRequest, TypedResponse, TypedRouter } from "../src/express-typed";
+import request from "supertest";
+import express from "express";
 
 // Test TypedRouter
-test("TypedRouter", () => {
+describe("TypedRouter", () => {
   const typedRouter = new TypedRouter({
     // returned type is inferred
     "/": {
@@ -53,30 +55,54 @@ test("TypedRouter", () => {
       },
     }),
   });
-  
-  
-  type AppRoutes = ParseRoutes<typeof typedRouter>;
+  test("TypedRouter correctly defined", () => {
+    expect(typedRouter).toBeDefined();
+  });
+  test("TypedRouter serves correctly express routes", async () => {
+    const app = express();
+    app.use(typedRouter.router);
+    await request(app)
+      .get("/")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("get: /");
+      });
 
-  type HomeGetResponse = GetRouteResponseInfo<AppRoutes, "/", "get">;
-  //   ^? "get: /"
-  type HomePostResponse = GetRouteResponseInfo<AppRoutes, "/", "post">;
-  //   ^? "post: /"
-  type ExplicitReqGetResponse = GetRouteResponseInfo<AppRoutes, "/explicit-req", "get">;
-  //   ^? { name: string }
-  type ExplicitResGetResponse = GetRouteResponseInfo<AppRoutes, "/explicit-res", "get">;
-  //   ^? { readonly name: "eliav" }
-  type NestedGetResponse = GetRouteResponseInfo<AppRoutes, "/nested/", "get">;
-  //   ^? "get /nested/"
-  type NestedPostResponse = GetRouteResponseInfo<AppRoutes, "/nested/", "post">;
-  //   ^? { userId: number; id: number; title: string; completed: boolean }
-  type AllMethodsResponse = GetRouteResponseInfo<AppRoutes, "/nested/all", "all">;
-  //   ^? "responding to all methods"
+    await request(app)
+      .post("/")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("post: /");
+      });
+  });
 
-  expectTypeOf<HomeGetResponse>().toEqualTypeOf<"get: /">();
-  expectTypeOf<HomePostResponse>().toEqualTypeOf<"post: /">();
-  expectTypeOf<ExplicitReqGetResponse>().toEqualTypeOf<{ name: string }>();
-  expectTypeOf<ExplicitResGetResponse>().toEqualTypeOf<{ readonly name: "eliav" }>();
-  expectTypeOf<NestedGetResponse>().toEqualTypeOf<"get /nested/">();
-  expectTypeOf<NestedPostResponse>().toEqualTypeOf<{ userId: number; id: number; title: string; completed: boolean }>();
-  expectTypeOf<AllMethodsResponse>().toEqualTypeOf<"responding to all methods">();
+  test("TypedRouter serves correctly express nested routes", async () => {
+    const app = express();
+    app.use(typedRouter.router);
+    await request(app)
+      .get("/nested")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("get /nested/");
+      });
+
+    await request(app)
+      .post("/nested")
+      .expect(200)
+      .then((res) => {
+        expect(res.body).toEqual({
+          userId: 1,
+          id: 1,
+          title: "delectus aut autem",
+          completed: false,
+        });
+      });
+
+    await request(app)
+      .options("/nested/all")
+      .expect(200)
+      .then((res) => {
+        expect(res.text).toBe("responding to all methods");
+      });
+  });
 });
