@@ -184,9 +184,6 @@ importers:
       express:
         specifier: ^4.19.2
         version: 4.19.2
-      express=typed-dist:
-        specifier: file:dist
-        version: dist@file:packages/express-typed/dist
       supertest:
         specifier: ^7.0.0
         version: 7.0.0
@@ -1174,9 +1171,6 @@ packages:
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
-
-  dist@file:packages/express-typed/dist:
-    resolution: {directory: packages/express-typed/dist, type: directory}
 
   doctrine@3.0.0:
     resolution: {integrity: sha512-yS+Q5i3hBf7GBkd4KG8a7eBNNWNGLTaEwwYWUijIYM7zrlYDM0BFXHjjPWlWZ1Rg7UaddZeIDmi9jF3HmqiQ2w==}
@@ -3178,8 +3172,6 @@ snapshots:
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
-
-  dist@file:packages/express-typed/dist: {}
 
   doctrine@3.0.0:
     dependencies:
