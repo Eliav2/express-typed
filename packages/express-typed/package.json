@@ -1,6 +1,6 @@
 {
   "name": "express-typed",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "end-to-end typesafe TypeScript wrapper for Express.js",
   "repository": {
     "type": "git",
@@ -9,12 +9,12 @@
   "homepage": "https://github.com/Eliav2/express-typed",
   "bugs": "https://github.com/Eliav2/express-typed/issues",
   "type": "module",
-  "main": "dist/express-typed.js",
-  "module": "dist/express-typed.js",
-  "types": "dist/express-typed.d.ts",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc -w",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "prepublishOnly": "pnpm build",
     "test": "vitest",
     "version": "auto-changelog -p && git add CHANGELOG.md"
@@ -30,6 +30,7 @@
     "@vitest/coverage-v8": "^1.5.2",
     "express": "^4.19.2",
     "supertest": "^7.0.0",
+    "tsup": "^8.1.0",
     "typescript": "^5.4.2"
   },
   "peerDependencies": {
