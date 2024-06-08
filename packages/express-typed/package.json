@@ -1,6 +1,6 @@
 {
   "name": "express-typed",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "end-to-end typesafe TypeScript wrapper for Express.js",
   "repository": {
     "type": "git",
