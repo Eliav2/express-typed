@@ -58,7 +58,7 @@ export type AppRoutes = ParseRoutes<typeof typedRouter>;
 export type RouteResResolver<
   Path extends keyof AppRoutes,
   Method extends keyof AppRoutes[Path],
-  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body",
+  Info extends keyof GetRouteResponseInfoHelper<AppRoutes, Path, Method> | "body" = "body"
 > = GetRouteResponseInfo<AppRoutes, Path, Method, Info>;
 
 // example usage
