@@ -1,7 +1,7 @@
 import express from "express";
 import logger from "morgan";
-import typedRouter from "./routes/typed.routes";
-import notTypedRouter from "./routes/not-typed.routes";
+import typedRouter from "./routes/typed.routes.js";
+import notTypedRouter from "./routes/not-typed.routes.js";
 
 // Create Express server
 export const app = express();

@@ -53,8 +53,7 @@ test("TypedRouter", () => {
       },
     }),
   });
-  
-  
+
   type AppRoutes = ParseRoutes<typeof typedRouter>;
 
   type HomeGetResponse = GetRouteResponseInfo<AppRoutes, "/", "get">;
