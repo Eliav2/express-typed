@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import { UnionToIntersection, WithDefault } from "./type-utils";
-
+import { RouteParameters } from "express-serve-static-core";
 // Patches the Response object with extra information, so that can later be extracted
 export type TypedResponse<Res extends Partial<TypedResponseRes> = TypedResponseRes, Info extends any[] = []> = {
   status<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { status: T }]>;
@@ -21,29 +21,54 @@ export type TypedResponseRes = { body: any; locals: Record<string, any>; routes:
 // The different methods that can be used to send a response, those have special meaning
 export type SendMethod = "send" | "json" | "jsonp";
 
-export type TypedRequest<ReqInfo extends { body?: any; query?: any } = { body: any; query: any }> = {
+export type TypedRequest<ReqInfo extends { body?: any; query?: any; params?: any } = { body: any; query: any; params: any }> = {
   body: ReqInfo["body"];
   query: ReqInfo["query"];
-};
-// & Omit<Request, "body">;
+  params: ReqInfo["params"];
+}; //& Omit<Request, "body">;
 
 // The different methods that can be used to handle a request
 export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
+class MyClass {}
+
+// const made = new MyClass();
+
+// export type InferA<T extends (req, res) => any> = T extends (req: infer Req, res: any) => any ? Req : never;
+
+export type Handler = (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+
+export type RouteHandler<OriginRoute extends string> = {
+  [HandlerName in HandlerMethods]?: Handler;
+  // [HandlerName in HandlerMethods]?: (req: TypedRequest<{params:RouteParameters<OriginRoute>}>, res: TypedResponse, next: NextFunction) => void;
+};
+
+export type TypedRoutes<Routes> = {
+  [Route in OnlyString<keyof Routes>]: Routes[Route] extends TypedRouter<infer N extends TypedRoutes<any>>
+    ? TypedRouter<N>
+    : // : RouteHandler<Route>;
+      // { [HandlerName in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void };
+      {
+        [HandlerName in HandlerMethods]?: HandlerName extends keyof Routes[Route]
+          ? Routes[Route][HandlerName] extends (
+              req: TypedRequest<infer ReqInfo>,
+              res: TypedResponse<infer Resinfo>,
+              next: NextFunction
+            ) => void
+            ? ReqInfo extends {}
+              ? (req: TypedRequest<ReqInfo>, res: TypedResponse<Resinfo>, next: NextFunction) => void
+              : "ReqInfo should be blala"
+            : "handler should be of type Handler"
+          : "Handler name should be a valid method";
+      };
+};
+
+type OnlyString<T> = T extends string ? T : never;
+
 /**
  * TypedRouter is a type-safe wrapper for Express Router.
  */
-export class TypedRouter<
-  R extends {
-    [K in string]: R[K] extends TypedRouter<infer N>
-      ? TypedRouter<N>
-      :
-          | {
-              [key in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
-            }
-          | TypedRouter<any>;
-  }
-> {
+export class TypedRouter<R extends TypedRoutes<R>> {
   router: express.Router;
   routes: R;
 
@@ -71,7 +96,7 @@ export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["route
 export type FlatNestedRouters<T> = {
   [K in keyof T]: K extends string
     ? (
-        x: T[K] extends TypedRouter<infer N>
+        x: T[K] extends TypedRouter<infer N extends TypedRoutes<any>>
           ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
           : Pick<T, K>
       ) => void
