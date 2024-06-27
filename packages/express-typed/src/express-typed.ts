@@ -1,8 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
 import { UnionToIntersection, WithDefault } from "./type-utils";
 import { RouteParameters } from "express-serve-static-core";
+
 // Patches the Response object with extra information, so that can later be extracted
-export type TypedResponse<Res extends Partial<TypedResponseRes> = TypedResponseRes, Info extends any[] = []> = {
+export type TypedResponse<Res extends Partial<TypedResponseOptions> = TypedResponseOptions, Info extends any[] = []> = {
   status<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { status: T }]>;
   links<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { links: T }]>;
   sendStatus<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { sendStatus: T }]>;
@@ -16,12 +17,14 @@ export type TypedResponse<Res extends Partial<TypedResponseRes> = TypedResponseR
   send<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { send: T }]>;
 } & Response<Res["body"], WithDefault<Res["locals"], Record<string, any>>>;
 
-export type TypedResponseRes = { body: any; locals: Record<string, any>; routes: any };
+export type TypedResponseOptions = { body: any; locals: Record<string, any>; routes: any };
 
 // The different methods that can be used to send a response, those have special meaning
 export type SendMethod = "send" | "json" | "jsonp";
 
-export type TypedRequest<ReqInfo extends { body?: any; query?: any; params?: any } = { body: any; query: any; params: any }> = {
+export type TypedRequestOptions = { body: any; query: any; params: any };
+
+export type TypedRequest<ReqInfo extends Partial<TypedRequestOptions> = TypedRequestOptions> = {
   body: ReqInfo["body"];
   query: ReqInfo["query"];
   params: ReqInfo["params"];
@@ -43,23 +46,53 @@ export type RouteHandler<OriginRoute extends string> = {
   // [HandlerName in HandlerMethods]?: (req: TypedRequest<{params:RouteParameters<OriginRoute>}>, res: TypedResponse, next: NextFunction) => void;
 };
 
-export type TypedRoutes<Routes> = {
+export type TypedRoutes<Routes extends TypedRoutes<Routes>> = {
   [Route in OnlyString<keyof Routes>]: Routes[Route] extends TypedRouter<infer N extends TypedRoutes<any>>
     ? TypedRouter<N>
-    : // : RouteHandler<Route>;
-      // { [HandlerName in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void };
+    : // : {
+      //     [HandlerName in HandlerMethods]?: HandlerName extends keyof Routes[Route]
+      //       ? // [HandlerName in keyof Routes[Route]]?: HandlerName extends HandlerMethods
+      //         // route handler should be a function
+      //         Routes[Route][HandlerName] extends (req: any, res: any, next: any) => void
+      //         ? // from now route handler is a function
+      //           // check if handler args (req,res,next) are correct as TypedRequest, TypedResponse, NextFunction
+      //           Routes[Route][HandlerName] extends (req: TypedRequest, res: TypedResponse, next?: NextFunction) => void
+      //           ? // if so try to infer the request info
+      //             Routes[Route][HandlerName] extends (
+      //               req: TypedRequest<infer ReqInfo>,
+      //               res: TypedResponse<infer Resinfo>,
+      //               next: NextFunction
+      //             ) => void
+      //             ? (req: TypedRequest<ReqInfo>, res: TypedResponse<Resinfo>, next?: NextFunction) => void
+      //             : "handler should be of type Handler"
+      //           : // if function -> it least enforce TypedRequest, TypedResponse, NextFunction
+      //             (req?: TypedRequest, res?: TypedResponse, next?: NextFunction) => void
+      //         : (req?: any, res?: any, next?: any) => void // `${HandlerName} handler should be a function`
+      //       : never;
+      //   };
+
+      // {
+      //   [HandlerName in HandlerMethods]?: HandlerName extends keyof Routes[Route]
+      //     ? Routes[Route][HandlerName] extends (
+      //         req: TypedRequest<infer ReqInfo>,
+      //         res: TypedResponse<infer Resinfo>,
+      //         next: NextFunction
+      //       ) => void
+      //       ? (req: TypedRequest<ReqInfo>, res: TypedResponse<Resinfo>, next: NextFunction) => void
+      //       : (req: TypedRequest, res: TypedResponse, next: NextFunction) => void // `${HandlerName} handler should be a function`
+      //     : never;
+      // };
+
       {
         [HandlerName in HandlerMethods]?: HandlerName extends keyof Routes[Route]
           ? Routes[Route][HandlerName] extends (
-              req: TypedRequest<infer ReqInfo>,
+              req: TypedRequest<infer ReqInfo extends { params?: any }>,
               res: TypedResponse<infer Resinfo>,
               next: NextFunction
             ) => void
-            ? ReqInfo extends {}
-              ? (req: TypedRequest<ReqInfo>, res: TypedResponse<Resinfo>, next: NextFunction) => void
-              : "ReqInfo should be blala"
-            : "handler should be of type Handler"
-          : "Handler name should be a valid method";
+            ? (req: TypedRequest<ReqInfo>, res: TypedResponse<Resinfo>, next: NextFunction) => void
+            : (req: TypedRequest, res: TypedResponse, next: NextFunction) => void // `${HandlerName} handler should be a function`
+          : never;
       };
 };
 
