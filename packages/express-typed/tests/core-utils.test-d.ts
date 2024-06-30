@@ -374,5 +374,12 @@ describe("ParseRoutes", () => {
         },
       },
     });
+    const R3_3 = new TypedRouter({
+      "/home/:productId": {
+        get: (req) => {
+          const a = req.body;
+        },
+      },
+    });
   });
 });

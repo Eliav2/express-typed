@@ -92,7 +92,12 @@ export type TypedRoutes<Routes> = {
               next: NextFunction
             ) => void
             ? (req: TypedRequest<ReqInfo & { params: RouteParameters<Route> }>, res: TypedResponse<Resinfo>, next: NextFunction) => void
-            : (req: TypedRequest, res: TypedResponse, next: NextFunction) => void // `${HandlerName} handler should be a function`
+            : // (
+              //   req: ReqInfo extends { params?: RouteParameters<Route> } ? ReqInfo : "error",
+              //   res: TypedResponse<Resinfo>,
+              //   next: NextFunction
+              // ) => void
+              never //(req: TypedRequest, res: TypedResponse, next: NextFunction) => void // `${HandlerName} handler should be a function`
           : never;
       };
 };
