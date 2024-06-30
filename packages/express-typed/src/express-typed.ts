@@ -17,12 +17,12 @@ export type TypedResponse<Res extends Partial<TypedResponseOptions> = TypedRespo
   send<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { send: T }]>;
 } & Response<Res["body"], WithDefault<Res["locals"], Record<string, any>>>;
 
-export type TypedResponseOptions = { body: any; locals: Record<string, any>; routes: any };
+export type TypedResponseOptions = { body: unknown; locals: Record<string, unknown>; routes: unknown };
 
 // The different methods that can be used to send a response, those have special meaning
 export type SendMethod = "send" | "json" | "jsonp";
 
-export type TypedRequestOptions = { body: any; query: any; params: any };
+export type TypedRequestOptions = { body: unknown; query: unknown; params: unknown };
 
 export type TypedRequest<ReqInfo extends Partial<TypedRequestOptions> = TypedRequestOptions> = {
   body: ReqInfo["body"];
@@ -46,8 +46,9 @@ export type RouteHandler<OriginRoute extends string> = {
   // [HandlerName in HandlerMethods]?: (req: TypedRequest<{params:RouteParameters<OriginRoute>}>, res: TypedResponse, next: NextFunction) => void;
 };
 
-export type TypedRoutes<Routes extends TypedRoutes<Routes>> = {
-  [Route in OnlyString<keyof Routes>]: Routes[Route] extends TypedRouter<infer N extends TypedRoutes<any>>
+export type TypedRoutes<Routes> = {
+  // export type TypedRoutes<Routes extends TypedRoutes<Routes>> = {
+  [Route in OnlyString<keyof Routes>]: Routes[Route] extends TypedRouter<infer N>
     ? TypedRouter<N>
     : // : {
       //     [HandlerName in HandlerMethods]?: HandlerName extends keyof Routes[Route]
@@ -86,11 +87,11 @@ export type TypedRoutes<Routes extends TypedRoutes<Routes>> = {
       {
         [HandlerName in HandlerMethods]?: HandlerName extends keyof Routes[Route]
           ? Routes[Route][HandlerName] extends (
-              req: TypedRequest<infer ReqInfo extends { params?: any }>,
+              req: TypedRequest<infer ReqInfo>,
               res: TypedResponse<infer Resinfo>,
               next: NextFunction
             ) => void
-            ? (req: TypedRequest<ReqInfo>, res: TypedResponse<Resinfo>, next: NextFunction) => void
+            ? (req: TypedRequest<ReqInfo & { params: RouteParameters<Route> }>, res: TypedResponse<Resinfo>, next: NextFunction) => void
             : (req: TypedRequest, res: TypedResponse, next: NextFunction) => void // `${HandlerName} handler should be a function`
           : never;
       };
@@ -121,22 +122,56 @@ export class TypedRouter<R extends TypedRoutes<R>> {
     }
   }
 }
+type StringOnly<T> = T extends string ? T : never;
 
 // extract any relevant information from TypedRouter, and flatten any nested routers
-export type ParseRoutes<T extends TypedRouter<any>> = FlatNestedRouters<T["routes"]>;
+export type ParseRoutes<T extends TypedRouter<any>> = TypedRoutes<FlatNestedRouters<T["routes"]>>;
+
+// export type FlatRoute<Routes> = {
+//   [Route in keyof Routes]: (
+//     x: Routes[Route] extends TypedRouter<infer NestedRoutes>
+//       ? // flat any nested routes recursively
+//         FlatRoute<{
+//           // re-map nested routes strins to be prefixed with parent route
+//           [NestedRoute in keyof NestedRoutes as `${StringOnly<Route>}${StringOnly<NestedRoute>}`]: NestedRoutes[NestedRoute];
+//         }>
+//       : Pick<Routes, Route>
+//   ) => void;
+//   // trick to re-map keys into union of intersections using function arguments (see https://stackoverflow.com/questions/78364892/typescript-how-to-flatten-nested-generic-type-into-parent-generic-type)
+// } extends { [k: string]: (x: infer I) => void }
+//   ? { [K in keyof I]: I[K] }
+//   : never;
 
 // flatten any nested routers
-export type FlatNestedRouters<T> = {
-  [K in keyof T]: K extends string
-    ? (
-        x: T[K] extends TypedRouter<infer N extends TypedRoutes<any>>
-          ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
-          : Pick<T, K>
-      ) => void
-    : never;
+// export type FlatNestedRouters<Routes extends TypedRoutes<any>> = {
+export type FlatNestedRouters<Routes> = {
+  [Route in keyof Routes]: (
+    x: Routes[Route] extends TypedRouter<infer NestedRoutes>
+      ? // flat any nested routes recursively
+        FlatNestedRouters<{
+          // re-map nested routes strins to be prefixed with parent route
+          // [NestedRoute in keyof NestedRoutes]: any;
+          [NestedRoute in keyof NestedRoutes as `${StringOnly<Route>}${StringOnly<NestedRoute>}`]: NestedRoutes[NestedRoute];
+        }>
+      : Pick<Routes, Route>
+  ) => void;
+  // trick to re-map keys into union of intersections using function arguments (see https://stackoverflow.com/questions/78364892/typescript-how-to-flatten-nested-generic-type-into-parent-generic-type)
 } extends { [k: string]: (x: infer I) => void }
   ? { [K in keyof I]: I[K] }
   : never;
+
+// // flatten any nested routers
+// export type FlatNestedRouters<T> = {
+//   [K in keyof T]: K extends string
+//     ? (
+//         x: T[K] extends TypedRouter<infer N extends TypedRoutes<any>>
+//           ? FlatNestedRouters<{ [K2 in keyof N extends string ? `${keyof N}` : "" as `${K}${K2}`]: N[K2] }>
+//           : Pick<T, K>
+//       ) => void
+//     : never;
+// } extends { [k: string]: (x: infer I) => void }
+//   ? { [K in keyof I]: I[K] }
+//   : never;
 
 /**
  * Get the response info for a given route and method
