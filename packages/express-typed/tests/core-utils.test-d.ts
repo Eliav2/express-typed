@@ -6,9 +6,11 @@ import {
   TypedRequestOptions,
   TypedResponse,
   TypedResponseOptions,
+  TypedRouteOld as TypedRouterOld,
   TypedRouter,
   TypedRoutes,
   type FlatNestedRouters,
+  TypedRouterNew,
 } from "../src/express-typed";
 import { NextFunction } from "express-serve-static-core";
 
@@ -354,6 +356,55 @@ describe("ParseRoutes", () => {
   });
 
   it("expected errors", () => {
+    type t1 = TypedRouter<{ "/route": {} }>;
+    type t2 = TypedRouter<{ "/route": { get: (req: unknown) => {} } }>;
+    type t10 = TypedRouterOld<{ "/route": { get: (req, res, next) => void } }>;
+
+    const RO1 = new TypedRouterOld({
+      "/home": {
+        get: (req) => {
+          const a = req.params;
+        },
+      },
+    });
+
+    const RN1 = new TypedRouterNew({
+      "/home": {
+        get: (req) => {
+          const a = req.params;
+        },
+      },
+    });
+
+    const RN2 = new TypedRouterNew({
+      "/:id": {
+        get: (req) => {
+          req;
+        },
+      },
+      "/nested": new TypedRouterNew({
+        "/route": {
+          get: (req) => {
+            return req;
+          },
+        },
+        "/moreNested": new TypedRouterNew({
+          "/yu": {
+            get: (req) => {
+              return req.params;
+            },
+          },
+        }),
+      }),
+
+      "/home": {
+        posts: () => {},
+        get: (req) => {
+          const a = req.params;
+        },
+      },
+    });
+
     // @ts-expect-error
     const R1 = new TypedRouter({ "/home": { get: "not a function" } });
 
@@ -367,10 +418,15 @@ describe("ParseRoutes", () => {
         },
       },
     });
+
+    const func = (req, res, next) => {
+      const a = req.params;
+    };
+
     const R3_2 = new TypedRouter({
       "/home/:productId": {
         get: (req) => {
-          const a = req.params;
+          const a = req;
         },
       },
     });

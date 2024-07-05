@@ -14,7 +14,8 @@
   "author": "",
   "license": "ISC",
   "prettier": {
-    "printWidth": 140
+    "printWidth": 140,
+    "proseWrap": "preserve"
   },
   "devDependencies": {
     "@vitest/ui": "^1.5.2",

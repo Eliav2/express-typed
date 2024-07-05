@@ -31,7 +31,8 @@ export type TypedRequest<ReqInfo extends Partial<TypedRequestOptions> = TypedReq
 }; //& Omit<Request, "body">;
 
 // The different methods that can be used to handle a request
-export type HandlerMethods = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
+export const handlerMethods = ["all", "get", "post", "put", "delete", "patch", "options", "head"] as const;
+export type HandlerMethods = (typeof handlerMethods)[number];
 
 class MyClass {}
 
@@ -48,7 +49,7 @@ export type RouteHandler<OriginRoute extends string> = {
 
 export type TypedRoutes<Routes> = {
   // export type TypedRoutes<Routes extends TypedRoutes<Routes>> = {
-  [Route in OnlyString<keyof Routes>]: Routes[Route] extends TypedRouter<infer N>
+  [Route in OnlyString<keyof Routes>]: Routes[Route] extends TypedRouter<infer N extends TypedRoutes<any>>
     ? TypedRouter<N>
     : // : {
       //     [HandlerName in HandlerMethods]?: HandlerName extends keyof Routes[Route]
@@ -97,8 +98,9 @@ export type TypedRoutes<Routes> = {
               //   res: TypedResponse<Resinfo>,
               //   next: NextFunction
               // ) => void
-              never //(req: TypedRequest, res: TypedResponse, next: NextFunction) => void // `${HandlerName} handler should be a function`
-          : never;
+              never
+          : //(req: TypedRequest, res: TypedResponse, next: NextFunction) => void // `${HandlerName} handler should be a function`
+            never;
       };
 };
 
@@ -127,7 +129,118 @@ export class TypedRouter<R extends TypedRoutes<R>> {
     }
   }
 }
-type StringOnly<T> = T extends string ? T : never;
+
+type HandlerFunction<Req extends TypedRequestOptions = TypedRequestOptions, Res extends TypedResponseOptions = TypedResponseOptions> = (
+  req: TypedRequest<Req>,
+  res: TypedResponse<Res>,
+  next: NextFunction
+) => void;
+
+export type TypedRoutesNew<Routes extends Record<string, any>> = {
+  [Route in StringOnly<keyof Routes>]: Routes[Route] extends TypedRouterNew<infer N extends TypedRoutesNew<N>>
+    ? TypedRouterNew<N>
+    : // : {
+      //     [HandlerName in HandlerMethods]?: Routes[Route][HandlerName] extends (
+      //       req: TypedRequest<infer ReqInfo>,
+      //       res: TypedResponse<infer Resinfo>,
+      //       next: NextFunction
+      //     ) => void
+      //       ? (req: TypedRequest<ReqInfo & { params: RouteParameters<Route> }>, res: TypedResponse<Resinfo>, next: NextFunction) => void
+      //       : (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+      //   };
+
+      {
+        [HandlerName in HandlerMethods]?: Routes[Route][HandlerName] extends HandlerFunction<
+          infer ReqInfo extends TypedRequestOptions,
+          infer Resinfo extends TypedResponseOptions
+        >
+          ? // ? HandlerFunction<ReqInfo & { params: RouteParameters<Route> }, Resinfo>
+            HandlerFunction<ReqInfo & { params: RouteParameters<Route> }, Resinfo>
+          : // HandlerFunction
+            never;
+      };
+
+  // // works but not able to assert more accurate TypedRequest
+  // {
+  //   [HandlerName in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+  // };
+
+  // // works 2
+  // [Route in keyof Routes]: Routes[Route] extends TypedRouterNew<infer N extends TypedRoutesNew<any>>
+  //   ? TypedRouterNew<N>
+  //   : {
+  //       [key in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+  //     };
+
+  // // works
+  // [Route in keyof Routes]: Routes[Route] extends TypedRouter<infer N>
+  //   ? TypedRouter<N>
+  //   :
+  //       | {
+  //           [key in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+  //         }
+  //       | TypedRouter<any>;
+};
+
+const isHandlerMethods = (x: any): x is HandlerMethods => handlerMethods.includes(x);
+
+export class TypedRouterNew<R extends TypedRoutesNew<R>> {
+  router: express.Router;
+  routes: R;
+
+  constructor(routes: R) {
+    this.router = express.Router();
+    this.routes = routes;
+
+    for (const path in this.routes) {
+      for (const method in this.routes[path]) {
+        const route = this.routes[path];
+        if (route instanceof TypedRouter) {
+          this.router.use(path, route["router"]);
+        } else {
+          if (isHandlerMethods(method)) {
+            this.router[method](path, (this.routes[path] as any)[method]);
+          } else {
+            throw new Error(`Method ${method} is not a valid method`);
+          }
+        }
+      }
+    }
+  }
+}
+
+export class TypedRouteOld<
+  R extends {
+    [K in string]: R[K] extends TypedRouter<infer N>
+      ? TypedRouter<N>
+      :
+          | {
+              [key in HandlerMethods]?: (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
+            }
+          | TypedRouter<any>;
+  }
+> {
+  router: express.Router;
+  routes: R;
+
+  constructor(routes: R) {
+    this.router = express.Router();
+    this.routes = routes;
+
+    for (const path in this.routes) {
+      for (const method in this.routes[path]) {
+        const route = this.routes[path];
+        if (route instanceof TypedRouter) {
+          this.router.use(path, route["router"]);
+        } else {
+          (this.router as any)[method](path, this.routes[path][method]);
+        }
+      }
+    }
+  }
+}
+
+export type StringOnly<T> = T extends string ? T : never;
 
 // extract any relevant information from TypedRouter, and flatten any nested routers
 export type ParseRoutes<T extends TypedRouter<any>> = TypedRoutes<FlatNestedRouters<T["routes"]>>;
