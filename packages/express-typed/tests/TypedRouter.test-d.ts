@@ -1,5 +1,5 @@
 import { describe, it, expectTypeOf } from "vitest";
-import { StringOnly, TypedRequest, TypedRouter, TypedRouter, TypedRoutes } from "../src/express-typed";
+import { StringOnly, TypedRequest, TypedRouter, TypedRoutes } from "../src/express-typed";
 
 describe("TypedRouter", () => {
   it("explicit TypedRequest", () => {

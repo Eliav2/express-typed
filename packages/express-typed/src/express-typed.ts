@@ -2,38 +2,6 @@ import express, { Request, Response, NextFunction } from "express";
 import { UnionToIntersection, WithDefault } from "./type-utils";
 import { RouteParameters } from "express-serve-static-core";
 
-// Patches the Response object with extra information, so that can later be extracted
-export type TypedResponse<Res extends Partial<TypedResponseOptions> = TypedResponseOptions, Info extends any[] = []> = {
-  status<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { status: T }]>;
-  links<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { links: T }]>;
-  sendStatus<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { sendStatus: T }]>;
-  contentType<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { contentType: T }]>;
-  type<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { type: T }]>;
-  format<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { format: T }]>;
-  attachment<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { attachment: T }]>;
-
-  json<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { json: T }]>;
-  jsonp<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { jsonp: T }]>;
-  send<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { send: T }]>;
-} & Response<Res["body"], WithDefault<Res["locals"], Record<string, any>>>;
-
-export type TypedResponseOptions = { body: unknown; locals: Record<string, unknown>; routes: unknown };
-
-// The different methods that can be used to send a response, those have special meaning
-export type SendMethod = "send" | "json" | "jsonp";
-
-export type TypedRequestOptions = { body?: unknown; query?: unknown; params?: unknown };
-
-export type TypedRequest<ReqInfo extends Partial<TypedRequestOptions> = TypedRequestOptions> = {
-  body?: ReqInfo["body"];
-  query?: ReqInfo["query"];
-  params?: ReqInfo["params"];
-}; //& Omit<Request, "body">;
-
-// The different methods that can be used to handle a request
-export const handlerMethods = ["all", "get", "post", "put", "delete", "patch", "options", "head"] as const;
-export type HandlerMethods = (typeof handlerMethods)[number];
-
 // const made = new MyClass();
 
 // export type InferA<T extends (req, res) => any> = T extends (req: infer Req, res: any) => any ? Req : never;
@@ -102,8 +70,6 @@ export type HandlerMethods = (typeof handlerMethods)[number];
 //       };
 // };
 
-type OnlyString<T> = T extends string ? T : never;
-
 // /**
 //  * TypedRouter is a type-safe wrapper for Express Router.
 //  */
@@ -129,19 +95,91 @@ type OnlyString<T> = T extends string ? T : never;
 // }
 
 // infer the request type from the handler, or returns the default TypedRequestOptions
-type InferRequestType<T> = T extends Handler<infer R, any> ? R : TypedRequestOptions;
+// type InferRequestType<T> = T extends Handler<infer R, any> ? R : TypedRequestOptions;
 
-export type Handler<Req extends TypedRequestOptions = TypedRequestOptions, Res extends TypedResponseOptions = TypedResponseOptions> = (
-  req: TypedRequest<Req>,
-  res: TypedResponse<Res>,
-  next: NextFunction
-) => void;
+// expand a type
+type Expand<T> = T extends infer O ? { [K in keyof O]: O[K] } : never;
+// expand a type recursively, however, most of the type 'Expand' is sufficient
+type ExpandRecursively<T> = T extends object ? (T extends infer O ? { [K in keyof O]: ExpandRecursively<O[K]> } : never) : T;
+
+type OnlyString<T> = T extends string ? T : never;
+
+// Helper type to make our types invariant
+type Branded<T, Brand> = T & { __brand: Brand };
+
+export type TypedResponseOptions = { body: unknown; locals: Record<string, unknown>; routes: unknown };
+
+// Patches the Response object with extra information, so that can later be extracted
+export type TypedResponse<Res extends Partial<TypedResponseOptions> = TypedResponseOptions, Info extends any[] = []> = {
+  status<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { status: T }]>;
+  links<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { links: T }]>;
+  sendStatus<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { sendStatus: T }]>;
+  contentType<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { contentType: T }]>;
+  type<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { type: T }]>;
+  format<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { format: T }]>;
+  attachment<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { attachment: T }]>;
+
+  json<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { json: T }]>;
+  jsonp<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { jsonp: T }]>;
+  send<const T extends Res["body"]>(arg: T): TypedResponse<Res, [...Info, { send: T }]>;
+} & Response<Res["body"], WithDefault<Res["locals"], Record<string, any>>>;
+
+export type TypedRequestOptions = { body?: unknown; query?: unknown; params?: unknown };
+
+type RequiredKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? never : K }[keyof T];
+type OptionalKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? K : never }[keyof T];
+
+export type TypedRequest<ReqInfo extends Partial<TypedRequestOptions> = TypedRequestOptions, AllowExtra extends boolean = false> = Expand<
+  {
+    // gets all required keys and adds them as required properties
+    [K in RequiredKeys<ReqInfo>]: ReqInfo[K];
+  } & {
+    // gets all optional keys and adds them as optional properties
+    [K in OptionalKeys<ReqInfo>]?: ReqInfo[K];
+  } & (AllowExtra extends true
+      ? // for any key in TypedRequestOptions that isn't explicitly specified in ReqInfo, add it as an optional property of type unknown
+        {
+          [K in Exclude<keyof TypedRequestOptions, keyof ReqInfo>]?: unknown;
+        }
+      : {})
+>;
+
+export type StrictTypedRequest<T extends Partial<TypedRequestOptions>> = {
+  [K in keyof T]-?: T[K];
+} & {
+  [K in Exclude<keyof TypedRequestOptions, keyof T>]: never;
+};
+
+//& Omit<Request, "body">;
+
+// The different methods that can be used to handle a request
+export const handlerMethods = ["all", "get", "post", "put", "delete", "patch", "options", "head"] as const;
+export type HandlerMethods = (typeof handlerMethods)[number];
+
+type MergeRouteParams<ReqOptions extends TypedRequestOptions, Route extends string> = Omit<ReqOptions, "params"> & {
+  params: ReqOptions["params"] extends undefined ? RouteParameters<Route> : ReqOptions["params"] & RouteParameters<Route>;
+};
+
+type InferRequestOptionsType<T, Route extends string> = Expand<
+  T extends Handler<infer ReqOptions, any> ? MergeRouteParams<ReqOptions, Route> : MergeRouteParams<TypedRequestOptions, Route>
+>;
 
 export type TypedRoutes<Routes extends Record<string, any>> = {
   [Route in StringOnly<keyof Routes>]: Routes[Route] extends TypedRouter<any>
     ? TypedRouter<TypedRoutes<Routes[Route]["routes"]>>
-    : { [Method in HandlerMethods]?: Handler<InferRequestType<Routes[Route][Method]> & { params: RouteParameters<Route> }> };
+    : {
+        [Method in HandlerMethods]?: Handler<InferRequestOptionsType<Routes[Route][Method], Route>>;
+      };
 };
+
+export type Handler<
+  ReqOptions extends TypedRequestOptions = TypedRequestOptions,
+  ResOptions extends TypedResponseOptions = TypedResponseOptions
+> = (
+  req: TypedRequest<ReqOptions>, //& Record<string, never>, //& { params: NonNullable<ReqOptions["params"]> },
+  res: TypedResponse<ResOptions>,
+  next: NextFunction
+) => void;
 
 const isHandlerMethods = (x: any): x is HandlerMethods => handlerMethods.includes(x);
 
@@ -149,11 +187,11 @@ const isHandlerMethods = (x: any): x is HandlerMethods => handlerMethods.include
  * TypedRouter is a type-safe wrapper for Express Router.
  */
 
-export class TypedRouter<R extends TypedRoutes<R>> {
+export class TypedRouter<Routes extends TypedRoutes<Routes>> {
   router: express.Router;
-  routes: R;
+  routes: Routes;
 
-  constructor(routes: R) {
+  constructor(routes: Routes) {
     this.router = express.Router();
     this.routes = routes;
 

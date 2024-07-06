@@ -9,7 +9,8 @@
     "baseUrl": ".",
     "skipLibCheck": true,
     "strict": true,
-    "declaration": true,
+    "strictFunctionTypes": true,
+    "declaration": true
     // "emitDeclarationOnly": true
   },
   "include": ["src/**/*.ts"],
