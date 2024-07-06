@@ -137,22 +137,16 @@ type HandlerFunction<Req extends TypedRequestOptions = TypedRequestOptions, Res 
 ) => void;
 
 export type TypedRoutesNew<Routes extends Record<string, any>> = {
-  [Route in StringOnly<keyof Routes>]: Routes[Route] extends TypedRouterNew<infer N extends TypedRoutesNew<N>>
-    ? TypedRouterNew<N>
-    : // : {
-      //     [HandlerName in HandlerMethods]?: Routes[Route][HandlerName] extends (
-      //       req: TypedRequest<infer ReqInfo>,
-      //       res: TypedResponse<infer Resinfo>,
-      //       next: NextFunction
-      //     ) => void
-      //       ? (req: TypedRequest<ReqInfo & { params: RouteParameters<Route> }>, res: TypedResponse<Resinfo>, next: NextFunction) => void
-      //       : (req: TypedRequest, res: TypedResponse, next: NextFunction) => void;
-      //   };
-
-      {
+  [Route in StringOnly<keyof Routes>]: Routes[Route] extends TypedRouterNew<any>
+    ? TypedRouterNew<TypedRoutesNew<Routes[Route]["routes"]>>
+    : {
         [HandlerName in HandlerMethods]?: Routes[Route][HandlerName] extends HandlerFunction<
+          // infer ReqInfo,
+          // infer Resinfo
           infer ReqInfo extends TypedRequestOptions,
           infer Resinfo extends TypedResponseOptions
+          // infer ReqInfo extends Record<keyof TypedRequestOptions, any>,
+          // infer Resinfo extends Record<keyof TypedResponseOptions, any>
         >
           ? // ? HandlerFunction<ReqInfo & { params: RouteParameters<Route> }, Resinfo>
             HandlerFunction<ReqInfo & { params: RouteParameters<Route> }, Resinfo>

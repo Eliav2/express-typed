@@ -147,7 +147,9 @@ describe("TypedRouter", () => {
 
     // nested
     const RNNested = new TypedRouterNew({
-      "/nested": new TypedRouterNew({}),
+      "/nested": new TypedRouterNew({
+        "/test": { get: (req) => {} },
+      }),
     });
 
     // mixed
@@ -163,20 +165,38 @@ describe("TypedRouter", () => {
         },
         post: (req) => {},
       },
-      "/nested2": new TypedRouterNew({ test: { get: (req) => {} } }),
+      "/nested2": new TypedRouterNew({ "/test": { get: (req) => {} } }),
       "/nested": new TypedRouterNew({
         "/route": {
           get: (req) => {
             return req;
           },
-          post: (req) => {},
+        },
+        "/:param": {
+          get: (req) => {
+            return req.params.param;
+          },
         },
         "/moreNested": new TypedRouterNew({
-          "/:yu": {
+          "/:param": {
             get: (req) => {
-              req.params.aa;
-              return req.params.yu;
+              // req.params.aa;
+              return req.params.param;
             },
+            "/moreNested2": new TypedRouterNew({
+              "/test": {
+                get: (req) => {
+                  return req;
+                },
+                "/moreNested3": new TypedRouterNew({
+                  "/test": {
+                    post: (req) => {
+                      return req;
+                    },
+                  },
+                }),
+              },
+            }),
           },
         }),
       }),
