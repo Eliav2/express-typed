@@ -1,5 +1,152 @@
-import { describe, it } from "vitest";
-import { StringOnly, TypedRequest, TypedRouter, TypedRouterNew } from "../src/express-typed";
+import { describe, it, expectTypeOf } from "vitest";
+import { StringOnly, TypedRequest, TypedRouter, TypedRouter, TypedRoutes } from "../src/express-typed";
+
+describe("TypedRouter", () => {
+  it("explicit TypedRequest", () => {
+    const r = new TypedRouter({
+      "/home": {
+        get: (req: TypedRequest<{ body: { name: string } }>) => {
+          const a = req.params;
+        },
+      },
+    });
+
+    expectTypeOf<typeof r>().toEqualTypeOf<
+      TypedRouter<{
+        "/home": {
+          get: (
+            req: TypedRequest<{
+              body: {
+                name: string;
+              };
+            }>
+          ) => void;
+        };
+      }>
+    >();
+  });
+  it("explicit TypedRequest with unmatched path param", () => {
+    const r = new TypedRouter({
+      "/:explicitly_typed_with_param": {
+        // @ts-expect-error: `TypedRequest<{ body: { val: string } }>)` is not compatible with `TypedRequest<{ params: { explicitly_typed_with_param: string } }>`
+        get: (req: TypedRequest<{ body: { val: string } }>) => {
+          const a = req.params;
+        },
+      },
+    });
+  });
+  it("expected errors", () => {
+    type t1 = TypedRouter<{ "/home": { get: (req: any) => void } }>;
+
+    // simple
+    const RN1 = new TypedRouter({
+      "/home": {
+        get: (req) => {
+          const a = req.params;
+        },
+      },
+    });
+
+    // nested
+    const RNNested = new TypedRouter({
+      "/nested": new TypedRouter({
+        "/test": { get: (req) => {} },
+      }),
+    });
+
+    // mixed
+    const RN2 = new TypedRouter({
+      "/home": {
+        get: (req) => {
+          const a = req.params;
+        },
+      },
+      "/:id": {
+        get: (req) => {
+          req;
+        },
+        post: (req) => {},
+      },
+      "/nested2": new TypedRouter({ "/test": { get: (req) => {} } }),
+      "/nested": new TypedRouter({
+        "/route": {
+          get: (req) => {
+            return req;
+          },
+        },
+        "/:param": {
+          get: (req) => {
+            return req.params?.param;
+          },
+        },
+        "/moreNested": new TypedRouter({
+          "/:param": {
+            get: (req) => {
+              // req.params.aa;
+              return req.params?.param;
+            },
+            "/moreNested2": new TypedRouter({
+              "/test": {
+                get: (req) => {
+                  return req;
+                },
+                "/moreNested3": new TypedRouter({
+                  "/test": {
+                    post: (req) => {
+                      return req;
+                    },
+                  },
+                }),
+              },
+            }),
+          },
+        }),
+      }),
+    });
+
+    // typed TypedRequest
+    const RN5 = new TypedRouter({
+      "/home": {
+        get: (req) => {
+          const a = req.params;
+        },
+      },
+    });
+
+    // @ts-expect-error
+    const R1 = new TypedRouter({ "/home": { get: "not a function" } });
+
+    // @ts-expect-error
+    const R2 = new TypedRouter({ "/home": { wrongMethod: (req: any) => {} } });
+
+    const R3_1 = new TypedRouter({
+      "/home": {
+        get: (req, res, next) => {
+          const a = req.params;
+        },
+      },
+    });
+
+    const func = (req, res, next) => {
+      const a = req.params;
+    };
+
+    const R3_2 = new TypedRouter({
+      "/home/:productId": {
+        get: (req) => {
+          const a = req;
+        },
+      },
+    });
+    const R3_3 = new TypedRouter({
+      "/home/:productId": {
+        get: (req) => {
+          const a = req.body;
+        },
+      },
+    });
+  });
+});
 
 type Names = "eliav" | "yosi";
 
@@ -131,117 +278,3 @@ function makeBox<const U>(value: U): Box<U> {
 // has type '(arg: {}) => Box<{}[]>'
 const makeBoxedArray = compose(makeArray, makeBox);
 const v = makeBoxedArray("hello!");
-
-describe("TypedRouter", () => {
-  it("expected errors", () => {
-    type t1 = TypedRouterNew<{ "/home": { get: (req: any) => void } }>;
-
-    // simple
-    const RN1 = new TypedRouterNew({
-      "/home": {
-        get: (req) => {
-          const a = req.params;
-        },
-      },
-    });
-
-    // nested
-    const RNNested = new TypedRouterNew({
-      "/nested": new TypedRouterNew({
-        "/test": { get: (req) => {} },
-      }),
-    });
-
-    // mixed
-    const RN2 = new TypedRouterNew({
-      "/home": {
-        get: (req) => {
-          const a = req.params;
-        },
-      },
-      "/:id": {
-        get: (req) => {
-          req;
-        },
-        post: (req) => {},
-      },
-      "/nested2": new TypedRouterNew({ "/test": { get: (req) => {} } }),
-      "/nested": new TypedRouterNew({
-        "/route": {
-          get: (req) => {
-            return req;
-          },
-        },
-        "/:param": {
-          get: (req) => {
-            return req.params.param;
-          },
-        },
-        "/moreNested": new TypedRouterNew({
-          "/:param": {
-            get: (req) => {
-              // req.params.aa;
-              return req.params.param;
-            },
-            "/moreNested2": new TypedRouterNew({
-              "/test": {
-                get: (req) => {
-                  return req;
-                },
-                "/moreNested3": new TypedRouterNew({
-                  "/test": {
-                    post: (req) => {
-                      return req;
-                    },
-                  },
-                }),
-              },
-            }),
-          },
-        }),
-      }),
-    });
-
-    // typed TypedRequest
-    const RN5 = new TypedRouterNew({
-      "/home": {
-        get: (req) => {
-          const a = req.params;
-        },
-      },
-    });
-
-    // @ts-expect-error
-    const R1 = new TypedRouter({ "/home": { get: "not a function" } });
-
-    // @ts-expect-error
-    const R2 = new TypedRouter({ "/home": { wrongMethod: (req: any) => {} } });
-
-    const R3_1 = new TypedRouter({
-      "/home": {
-        get: (req, res, next) => {
-          const a = req.params;
-        },
-      },
-    });
-
-    const func = (req, res, next) => {
-      const a = req.params;
-    };
-
-    const R3_2 = new TypedRouter({
-      "/home/:productId": {
-        get: (req) => {
-          const a = req;
-        },
-      },
-    });
-    const R3_3 = new TypedRouter({
-      "/home/:productId": {
-        get: (req) => {
-          const a = req.body;
-        },
-      },
-    });
-  });
-});

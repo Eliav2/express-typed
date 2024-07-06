@@ -10,7 +10,7 @@ import {
   TypedRouter,
   TypedRoutes,
   type FlatNestedRouters,
-  TypedRouterNew,
+  TypedRouter,
 } from "../src/express-typed";
 import { NextFunction } from "express-serve-static-core";
 
@@ -368,7 +368,7 @@ describe("ParseRoutes", () => {
       },
     });
 
-    const RN1 = new TypedRouterNew({
+    const RN1 = new TypedRouter({
       "/home": {
         get: (req) => {
           const a = req.params;
@@ -376,19 +376,19 @@ describe("ParseRoutes", () => {
       },
     });
 
-    const RN2 = new TypedRouterNew({
+    const RN2 = new TypedRouter({
       "/:id": {
         get: (req) => {
           req;
         },
       },
-      "/nested": new TypedRouterNew({
+      "/nested": new TypedRouter({
         "/route": {
           get: (req) => {
             return req;
           },
         },
-        "/moreNested": new TypedRouterNew({
+        "/moreNested": new TypedRouter({
           "/yu": {
             get: (req) => {
               return req.params;
